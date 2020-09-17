@@ -1,0 +1,14 @@
+[
+  {
+    "name": "stable",
+    "url": "https://kubernetes-charts.storage.googleapis.com"
+  },
+  {
+    "name": "incubator",
+    "url": "https://kubernetes-charts-incubator.storage.googleapis.com"
+  },
+  {
+    "name": "bitnami",
+    "url": "https://charts.bitnami.com/bitnami"
+  }
+]

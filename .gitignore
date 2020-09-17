@@ -1,0 +1,7 @@
+.idea
+vendor/
+try_helm.go
+bin
+ui/.env
+ui/process.env
+.env
