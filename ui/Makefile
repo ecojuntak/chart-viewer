@@ -1,4 +1,4 @@
-include .env.local
+include .env.development
 
 APP_NAME=chart-viewer-ui
 APP_VERSION=$(shell cat VERSION)

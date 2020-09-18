@@ -6,6 +6,7 @@
 
 ## Run on your local
 ```shell
+$ cp .env.example .env.development
 $ make run
 ```
 
