@@ -2,7 +2,7 @@ package repository
 
 import (
 	"encoding/json"
-	"ht-ui/model"
+	"chart-viewer/model"
 	"os"
 
 	"github.com/go-redis/redis"

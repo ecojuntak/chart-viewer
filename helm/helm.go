@@ -3,8 +3,8 @@ package helm
 import (
 	"bytes"
 	"fmt"
-	"ht-ui/model"
-	"ht-ui/repository"
+	"chart-viewer/model"
+	"chart-viewer/repository"
 	"io/ioutil"
 	"log"
 	"os"

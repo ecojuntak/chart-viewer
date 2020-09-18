@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"ht-ui/handler"
-	"ht-ui/helm"
-	"ht-ui/repository"
-	"ht-ui/service"
+	"chart-viewer/handler"
+	"chart-viewer/helm"
+	"chart-viewer/repository"
+	"chart-viewer/service"
 	"log"
 	"net/http"
 	"os"

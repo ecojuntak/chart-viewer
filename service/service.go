@@ -1,12 +1,12 @@
 package service
 
 import (
+	"chart-viewer/helm"
+	"chart-viewer/model"
+	"chart-viewer/repository"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"ht-ui/helm"
-	"ht-ui/model"
-	"ht-ui/repository"
 	"io/ioutil"
 	"log"
 	"net/http"

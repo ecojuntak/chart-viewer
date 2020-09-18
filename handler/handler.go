@@ -3,8 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"ht-ui/model"
-	"ht-ui/service"
+	"chart-viewer/model"
+	"chart-viewer/service"
 	"io/ioutil"
 	"log"
 	"net/http"
