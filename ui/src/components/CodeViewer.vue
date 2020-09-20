@@ -5,7 +5,7 @@
       <v-col>
         <prism-editor
           class="my-editor overflow-x-auto" 
-          v-model="data"
+          v-model="code"
           line-numbers
           :highlight="highlighter"
           :readonly="readonly"
