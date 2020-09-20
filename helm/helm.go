@@ -2,44 +2,38 @@ package helm
 
 import (
 	"bytes"
-	"fmt"
 	"chart-viewer/model"
 	"chart-viewer/repository"
-	"io/ioutil"
-	"log"
-	"os"
-	"path/filepath"
-	"regexp"
-	"sort"
-	"strings"
-
-	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
+	"fmt"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/cli/values"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/releaseutil"
-	repoPkg "helm.sh/helm/v3/pkg/repo"
+	"log"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
 )
 
-type HelmClient struct {
+type Helm interface {
+	GetValues(chartUrl, chartName, chartVersion string) map[string]interface{}
+	GetManifest(chartUrl, chartName, chartVersion string) []model.Template
+	RenderManifest(chartUrl, chartName, chartVersion string, files []string) (error, []model.Manifest)
+}
+
+type helm struct {
 	client     *action.Install
-	repository *repository.Repository
+	repository repository.Repository
 }
 
-var (
-	settings = cli.New()
-)
+var settings = cli.New()
 
-func debug(format string, v ...interface{}) {
-	if settings.Debug {
-		log.Println(v)
-	}
-}
+func debug(format string, v ...interface{}) {}
 
-func NewHelmClient(repository *repository.Repository) *HelmClient {
+func NewHelmClient(repository repository.Repository) Helm {
 	actionConfig := new(action.Configuration)
 	err := actionConfig.Init(settings.RESTClientGetter(), settings.Namespace(), "", debug)
 	if err != nil {
@@ -51,70 +45,13 @@ func NewHelmClient(repository *repository.Repository) *HelmClient {
 	client.ClientOnly = true
 	client.UseReleaseName = true
 
-	return &HelmClient{
+	return &helm{
 		client:     client,
 		repository: repository,
 	}
 }
 
-func (h *HelmClient) InitRepos() {
-	chartRepos := h.repository.GetRepos()
-
-	for _, r := range chartRepos {
-		err := addRepo(r.Name, r.URL)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-func addRepo(name string, url string) error {
-
-	log.Printf("adding chart repo %s\n", name)
-
-	b, err := ioutil.ReadFile(settings.RepositoryConfig)
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
-
-	var f repoPkg.File
-	if err := yaml.Unmarshal(b, &f); err != nil {
-		return err
-	}
-
-	c := repoPkg.Entry{
-		Name:     name,
-		URL:      url,
-		Username: "",
-		Password: "",
-		CertFile: "",
-		KeyFile:  "",
-		CAFile:   "",
-	}
-
-	rep, err := repoPkg.NewChartRepository(&c, getter.All(settings))
-
-	if err != nil {
-		return err
-	}
-
-	if _, err := rep.DownloadIndexFile(); err != nil {
-		return errors.Wrapf(err, "looks like %q is not a valid chart repository or cannot be reached", url)
-	}
-
-	f.Update(&c)
-
-	if err := f.WriteFile(settings.RepositoryConfig, 0644); err != nil {
-		return err
-	}
-
-	log.Printf("%s chart repo added\n", name)
-
-	return nil
-}
-
-func (h *HelmClient) GetValues(chartUrl, chartName, chartVersion string) map[string]interface{} {
-
+func (h helm) GetValues(chartUrl, chartName, chartVersion string) map[string]interface{} {
 	log.Printf("getting %s:%s from remote\n", chartName, chartVersion)
 
 	h.client.ChartPathOptions.Version = chartVersion
@@ -128,11 +65,9 @@ func (h *HelmClient) GetValues(chartUrl, chartName, chartVersion string) map[str
 	chartRequested, _ := loader.Load(cp)
 
 	return chartRequested.Values
-
 }
 
-func (h *HelmClient) GetManifest(chartUrl, chartName, chartVersion string) []model.Template {
-
+func (h helm) GetManifest(chartUrl, chartName, chartVersion string) []model.Template {
 	h.client.ChartPathOptions.Version = chartVersion
 	h.client.ReleaseName = chartName
 	h.client.RepoURL = chartUrl
@@ -155,16 +90,15 @@ func (h *HelmClient) GetManifest(chartUrl, chartName, chartVersion string) []mod
 	}
 
 	return templateStrings
-
 }
 
-func (h *HelmClient) RenderManifest(chartUrl, chartName, chartVersion string, files []string) (bytes.Buffer, []model.ManifestObject) {
+func (h helm) RenderManifest(chartUrl, chartName, chartVersion string, files []string) (error, []model.Manifest) {
 	h.client.ChartPathOptions.Version = chartVersion
 	h.client.ReleaseName = chartName
 	h.client.RepoURL = chartUrl
 	cp, err := h.client.ChartPathOptions.LocateChart(chartName, settings)
 	if err != nil {
-		panic(err)
+		return err, nil
 	}
 
 	chartRequested, err := loader.Load(cp)
@@ -175,10 +109,13 @@ func (h *HelmClient) RenderManifest(chartUrl, chartName, chartVersion string, fi
 
 	p := getter.All(settings)
 	vals, err := valueOption.MergeValues(p)
+	if err != nil {
+		return err, nil
+	}
 
 	rel, err := h.client.Run(chartRequested, vals)
 	if err != nil {
-		panic(err)
+		return err, nil
 	}
 
 	var manifests bytes.Buffer
@@ -198,7 +135,7 @@ func (h *HelmClient) RenderManifest(chartUrl, chartName, chartVersion string, fi
 
 	sort.Sort(releaseutil.BySplitManifestsOrder(manifestsKeys))
 
-	var finalManifests []model.ManifestObject
+	var finalManifests []model.Manifest
 
 	for _, manifestKey := range manifestsKeys {
 		manifest := splitManifests[manifestKey]
@@ -216,11 +153,11 @@ func (h *HelmClient) RenderManifest(chartUrl, chartName, chartVersion string, fi
 			continue
 		}
 
-		finalManifests = append(finalManifests, model.ManifestObject{
+		finalManifests = append(finalManifests, model.Manifest{
 			Name:    manifestPath,
 			Content: manifest,
 		})
 	}
 
-	return manifests, finalManifests
+	return nil, finalManifests
 }

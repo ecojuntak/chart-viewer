@@ -30,18 +30,21 @@ func seedDatabase() {
 func main() {
 	r := mux.NewRouter()
 
-	repository := repository.NewRepository()
-	helmClient := helm.NewHelmClient(repository)
-	service := service.NewService(helmClient, repository)
-	handler := handler.NewHandler(service)
+	repo := repository.NewRepository()
+	helmClient := helm.NewHelmClient(repo)
+	svc := service.NewService(helmClient, repo)
+	appHandler := handler.NewHandler(svc)
 
-	r.Use(handler.CORS)
-	r.Use(handler.LoggerMiddleware)
-	r.HandleFunc("/repos", handler.RepoListHandler).Methods("get", "post")
-	r.HandleFunc("/repos/{repo-name}", handler.RepoDetailHandler)
-	r.HandleFunc("/repos/{repo-name}/{chart-name}/{chart-version}", handler.ChartHandler)
-	r.HandleFunc("/repos/{repo-name}/{chart-name}/{chart-version}/render", handler.RenderHandler)
-	r.HandleFunc("/manifest/{repo-name}/{chart-name}/{chart-version}/{hash}", handler.DownloadManifestHandler)
+	r.Use(appHandler.CORS)
+	r.Use(appHandler.LoggerMiddleware)
+	r.HandleFunc("/repos", appHandler.GetReposHandler)
+	r.HandleFunc("/charts/{repo-name}", appHandler.GetChartsHandler)
+	r.HandleFunc("/charts/{repo-name}/{chart-name}/{chart-version}", appHandler.GetChartHandler)
+	r.HandleFunc("/charts/values/{repo-name}/{chart-name}/{chart-version}", appHandler.GetValuesHandler)
+	r.HandleFunc("/charts/templates/{repo-name}/{chart-name}/{chart-version}", appHandler.GetTemplatesHandler)
+	r.HandleFunc("/charts/manifests/render/{repo-name}/{chart-name}/{chart-version}", appHandler.RenderManifestsHandler)
+	r.HandleFunc("/charts/manifests/{repo-name}/{chart-name}/{chart-version}/{hash}", appHandler.GetManifestsHandler)
+
 
 	seedDatabase()
 

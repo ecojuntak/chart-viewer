@@ -7,6 +7,9 @@ CHART_REPOS = $(shell cat ./seed.json)
 build:
 	go build -o bin/app .
 
+test:
+	go test ./...
+
 run:build
 	CHART_REPOS='${CHART_REPOS}' ./bin/app
 

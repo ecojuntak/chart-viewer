@@ -38,12 +38,12 @@ type ChartResponse struct {
 	URLs    []string `yaml:"urls"`
 }
 
-type ManifestObject struct {
+type Manifest struct {
 	Name    string `json:"name"`
 	Content string `json:"content"`
 }
 
 type ManifestResponse struct {
-	URL       string           `json:"url"`
-	Manifests []ManifestObject `json:"manifests"`
+	URL       string     `json:"url"`
+	Manifests []Manifest `json:"manifests"`
 }
