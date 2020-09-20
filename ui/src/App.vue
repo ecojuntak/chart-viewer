@@ -36,6 +36,18 @@
             </v-list-item-content>
           </v-list-item>
         </router-link>
+
+        <router-link to="/compare-manifest" class="no-style">
+          <v-list-item link>
+            <v-list-item-action>
+              <v-icon>mdi-select-compare</v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              Compare Manifest 
+            </v-list-item-content>
+          </v-list-item>
+        </router-link>
+
       </v-list>
     </v-navigation-drawer>
 

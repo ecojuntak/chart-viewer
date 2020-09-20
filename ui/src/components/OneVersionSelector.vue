@@ -27,14 +27,11 @@
           :items="versions"
           label="Chart Version"
           v-model="selectedVersion"
-          @change="fetchChartDetail"
+          @change="fetchChart"
         ></v-autocomplete>
       </v-col>
     </v-row>
-
-    <v-row v-if="templates.length != 0">
-      <chart-viewer :templates="templates"> </chart-viewer>
-    </v-row>
+    
     <v-row v-if="progressing">
       <v-progress-linear
         indeterminate
@@ -47,13 +44,9 @@
 <script>
   import api from '../api/api'
   import yaml from 'json-to-pretty-yaml'
-  import chartViewer from '../components/ChartViewer'
 
   export default {
-    name: 'Home',
-    components: {
-      chartViewer,
-    },
+    name: 'OneVersionSelector',
     data () {
       return {
         repos: [],
@@ -73,13 +66,32 @@
     methods: {
       async fetchRepoList() {
         this.resetState()
-        const response = await api.fetchRepoList()
+
+        const response = await api.fetchRepos()
         this.repos = response.data
       },
       async fetchChartList() {
         this.resetState()
-        const response = await api.fetchChartList(this.selectedRepo)
+        this.selectedChart = ""
+
+        const response = await api.fetchCharts(this.selectedRepo)
         this.charts = response.data
+      },
+      async fetchChart() {
+        this.values = ""
+        this.templates = []
+
+        this.progressing = true
+        const response = await api.fetchChart(this.selectedRepo, this.selectedChart, this.selectedVersion)
+        this.progressing = false
+        
+        this.values = yaml.stringify(response.data.values)
+        const templates = response.data.templates
+        this.templates = this.simplifyTemplateName(templates)
+        this.templates.push({
+          name: "values.yaml",
+          content: this.values
+        })
       },
       fetchVersionList() {
         this.templates = []
@@ -89,20 +101,6 @@
             break
           }
         }
-      },
-      async fetchChartDetail() {
-        this.values = ""
-        this.templates = []
-        this.progressing = true
-        const response = await api.fetchChartDetail(this.selectedRepo, this.selectedChart, this.selectedVersion)
-        this.progressing = false
-        this.values = yaml.stringify(response.data.values)
-        const templates = response.data.templates
-        this.templates = this.simplifyTemplateName(templates)
-        this.templates.push({
-          name: "values.yaml",
-          content: this.values
-        })
       },
       simplifyTemplateName(templates) {
         var temps = []
@@ -122,6 +120,23 @@
       resetState() {
         this.versions = []
         this.templates = []
+      }
+    },
+    watch: {
+      templates() {
+        this.$emit("templatesChanged", this.templates);
+      },
+      values() {
+        this.$emit("valuesChanged", this.values)
+      },
+      selectedRepo(){
+        this.$emit("repoChanged", this.selectedRepo)
+      },
+      selectedChart(){
+        this.$emit("chartChanged", this.selectedChart)
+      },
+      selectedVersion(){
+        this.$emit("versionChanged", this.selectedVersion)
       }
     }
   }

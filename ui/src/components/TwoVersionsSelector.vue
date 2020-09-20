@@ -8,7 +8,7 @@
           :item-text="contructChartName"
           item-value="name"
           v-model="selectedRepo"
-          @change="fetchChartList"
+          @change="fetchCharts"
         ></v-autocomplete>
       </v-col>
 
@@ -41,18 +41,15 @@
       </v-col>
     </v-row>
 
-    <v-row v-if="selectedChart != '' && (firstSelectedVersion == '' || secondSelectedVersion == '')">
+    <v-row v-if="selectedChart != '' && (firstSelectedVersion == '' || secondSelectedVersion == '')" class="d-flex flex-row-reverse">
       <v-alert
         outlined
+        dense
         type="warning"
         text
       >
         Please choose two versions 
       </v-alert>
-    </v-row>
-
-    <v-row v-if="firstTemplates.length != 0 && secondTemplates.length != 0">
-      <diff-viewer :firstTemplates="firstTemplates" :secondTemplates="secondTemplates"> </diff-viewer>
     </v-row>
 
     <v-row v-if="progressing">
@@ -67,13 +64,9 @@
 <script>
   import api from '../api/api'
   import yaml from 'json-to-pretty-yaml'
-  import diffViewer from '../components/DiffViewer'
 
   export default {
-    name: 'Compare',
-    components: {
-      diffViewer,
-    },
+    name: 'TwoVersionsSelector',
     data () {
       return {
         repos: [],
@@ -91,17 +84,18 @@
       }
     },
     mounted() {
-      this.fetchRepoList()
+      this.fetchRepos()
     },
     methods: {
-      async fetchRepoList() {
-        const response = await api.fetchRepoList()
+      async fetchRepos() {
+        const response = await api.fetchRepos()
         this.repos = response.data
       },
-      async fetchChartList() {
+      async fetchCharts() {
         this.resetState()
+        this.selectedChart = ""
 
-        const response = await api.fetchChartList(this.selectedRepo)
+        const response = await api.fetchCharts(this.selectedRepo)
         this.charts = response.data
       },
       fetchVersionList() {
@@ -119,7 +113,7 @@
         this.firstTemplates = []
 
         this.progressing = true
-        const firstChart = await api.fetchChartDetail(this.selectedRepo, this.selectedChart, this.firstSelectedVersion)
+        const firstChart = await api.fetchChart(this.selectedRepo, this.selectedChart, this.firstSelectedVersion)
         this.progressing = false
         
         this.firstValues = yaml.stringify(firstChart.data.values)
@@ -130,12 +124,12 @@
           content: this.firstValues
         })
       },
-       async fetchSecondChartDetail() {
+      async fetchSecondChartDetail() {
         this.secondValues = ""
         this.secondTemplates = []
 
         this.progressing = true
-        const secondChart = await api.fetchChartDetail(this.selectedRepo, this.selectedChart, this.secondSelectedVersion)
+        const secondChart = await api.fetchChart(this.selectedRepo, this.selectedChart, this.secondSelectedVersion)
         this.progressing = false
         
         this.secondValues = yaml.stringify(secondChart.data.values)
@@ -165,7 +159,35 @@
         this.versions = []
         this.firstTemplates = []
         this.secondTemplates = []
+        this.firstSelectedVersion = ""
+        this.secondSelectedVersion = ""
       }
-    }  
+    },
+    watch: {
+      selectedRepo() {
+        this.$emit("selectedRepoChanged", this.selectedRepo)
+      },
+      selectedChart() {
+        this.$emit("selectedChartChanged", this.selectedChart)
+      },
+      firstTemplates() {
+        this.$emit("firstTemplatesChanged", this.firstTemplates);
+      },
+      secondTemplates() {
+        this.$emit("secondTemplatesChanged", this.secondTemplates);
+      },
+      firstValues() {
+        this.$emit("firstValuesChanged", this.firstValues)
+      },
+      secondValues() {
+        this.$emit("secondValuesChanged", this.secondValues)
+      },
+      firstSelectedVersion() {
+        this.$emit("firstSelectedVersionChanged", this.firstSelectedVersion)
+      },
+      secondSelectedVersion() {
+        this.$emit("secondSelectedVersionChanged", this.secondSelectedVersion)
+      }
+    }
   }
 </script>

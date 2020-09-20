@@ -1,24 +1,30 @@
 import VueRouter from "vue-router";
 
-import Home from "./pages/Home.vue";
-import Compare from "./pages/Compare.vue";
+import Inspect from "./pages/Inspect.vue";
+import CompareChart from "./pages/CompareChart.vue";
 import RenderManifest from "./pages/Render.vue";
+import CompareManifest from "./pages/CompareManifest.vue"
 
 const routes = [
   {
     path: "/",
-    name: "Home",
-    component: Home
+    name: "Inspect",
+    component: Inspect
   },
   {
     path: "/compare",
-    name: "Compare",
-    component: Compare
+    name: "CompareChart",
+    component: CompareChart
   },
   {
     path: "/render-manifest",
     name: "RenderManifest",
     component: RenderManifest
+  },
+  {
+    path: "/compare-manifest",
+    name: "CompareManifest",
+    component: CompareManifest
   }
 ];
 

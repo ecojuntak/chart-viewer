@@ -41,7 +41,7 @@
           />
         </div>
         <div v-if="selectedTemplate.name != null && !selectedTemplate.changed">
-          <code-viewer :code="selectedTemplate.firstContent" :fileName="selectedTemplate.name"> </code-viewer>
+          <code-viewer :code="selectedTemplate.firstContent" :message="selectedTemplate.name"> </code-viewer>
         </div>
       </v-col>
     </v-row>
@@ -65,7 +65,9 @@ export default {
       temps: this.getMostCompletedTemplate(),
       filteredTemps: [],
       format: "side-by-side",
-      selectedTemplate: {}
+      selectedTemplate: {},
+      delayed: false,
+      emptyRenderMessage: '# This file empty because the file not expected to be rendered'
     }
   },
   methods: {
@@ -81,7 +83,7 @@ export default {
       this.selectedTemplate = file
     },
     getMostCompletedTemplate() {
-      if(this.firstTemplates.length > this.secondTemplates.length) {
+      if(this.firstTemplates.length >= this.secondTemplates.length) {
         return this.firstTemplates
       }
       return this.secondTemplates
@@ -97,26 +99,37 @@ export default {
       var mergedTemplates = []
       const mostCompletedTemplate = this.getMostCompletedTemplate()
 
-      for(var i=0; i<mostCompletedTemplate.length; i++) {
-        const anchorTemplate = this.firstTemplates[i]
+      for(var i=0; i < mostCompletedTemplate.length; i++) {
+        const anchorTemplate = mostCompletedTemplate[i]
         const templateOne = this.firstTemplates.find(temp => temp.name === anchorTemplate.name)
         const templateTwo = this.secondTemplates.find(temp => temp.name === anchorTemplate.name)
 
-        const mergedTemplate = {
-          name: templateTwo.name,
-          firstContent: templateOne.content,
-          secondContent: templateTwo.content,
-          changed: templateOne.content !== templateTwo.content
+        var contentOne = this.emptyRenderMessage
+        var contentTwo = this.emptyRenderMessage
+        if(templateOne != undefined) {
+          contentOne = templateOne.content
         }
-        
+
+        if(templateTwo != undefined) {
+          contentTwo = templateTwo.content
+        }
+
+        const mergedTemplate = {
+          name: anchorTemplate.name,
+          firstContent: contentOne,
+          secondContent: contentTwo,
+          changed: contentOne !== contentTwo
+        }
 
         mergedTemplates.push(mergedTemplate)
       }
 
-      return mergedTemplates
+      return mergedTemplates.sort((t1, t2) => {
+        return t1.changed !== t2.changed
+      })
     }
   },
-  mounted() {
+  async mounted() {
     this.filteredTemps = this.mergeTemplates()
   }
 }

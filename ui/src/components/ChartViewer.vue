@@ -27,7 +27,7 @@
       </v-col>
 
       <v-col cols="9" v-if="selectedTemplate != ''">
-        <code-viewer :readonly="true" :code="selectedTemplate.content" :fileName="selectedTemplate.name"> </code-viewer>
+        <code-viewer :readonly="true" :code="selectedTemplate.content" :message="selectedTemplate.name"> </code-viewer>
       </v-col>
     </v-row>
   </v-container>

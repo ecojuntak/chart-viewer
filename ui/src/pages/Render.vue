@@ -1,41 +1,16 @@
 <template>
   <v-container>
-    <v-row align="center">
-      <v-col class="d-flex" cols="4" sm="4">
-        <v-autocomplete
-          :items="repos"
-          label="Repo Name"
-          :item-text="contructChartName"
-          item-value="name"
-          v-model="selectedRepo"
-          @change="fetchChartList"
-        ></v-autocomplete>
-      </v-col>
-
-      <v-col class="d-flex" cols="4" sm="4">
-        <v-autocomplete
-          :items="charts"
-          label="Chart Name"
-          item-text="name"
-          v-model="selectedChart"
-          @change="fetchVersionList"
-        ></v-autocomplete>
-      </v-col>
-
-      <v-col class="d-flex" cols="4" sm="4">
-        <v-autocomplete
-          :items="versions"
-          label="Chart Version"
-          v-model="selectedVersion"
-          @change="fetchChartDetail"
-        ></v-autocomplete>
-      </v-col>
-    </v-row>
+    <one-version-selector
+      @valuesChanged="setValues"
+      @repoChanged="setRepo"
+      @chartChanged="setChart"
+      @versionChanged="setVersion"
+    />
 
     <v-row v-if="values !='' && manifests.length == 0">
-      <v-col cols="8">
+      <v-col cols="12">
         <p>
-          Costomize the <code>values.yaml</code> below
+          Customize the <code>values.yaml</code> below
         </p>
         <prism-editor
           class="my-editor overflow-x-auto" 
@@ -55,19 +30,13 @@
         </v-btn>
       </div>
       <div class="d-flex pa-2">
-        {{ generatedUrl }}
+        <code>{{ generatedCommand }}</code>
         <v-btn icon @click="copyGeneratedURL()">
           <v-icon> mdi-content-copy</v-icon>
         </v-btn>
-        <v-alert
-            v-if="copied"
-            dense
-            rounded
-            text
-            type="success"
-          >
-            URL copied
-          </v-alert>
+        <v-alert v-if="copied" dense rounded text type="success">
+          URL copied
+        </v-alert>
       </div>
       <chart-viewer :templates="manifests"> </chart-viewer>
     </v-row>
@@ -84,8 +53,8 @@
 
 <script>
   import api from '../api/api'
-  import yaml from 'json-to-pretty-yaml'
   import chartViewer from '../components/ChartViewer'
+  import oneVersionSelector from '../components/OneVersionSelector'
 
   import { PrismEditor } from 'vue-prism-editor'
   import 'vue-prism-editor/dist/prismeditor.min.css'
@@ -99,62 +68,42 @@
     name: 'Render',
     components: {
       PrismEditor,
-      chartViewer
+      chartViewer,
+      oneVersionSelector
     },
     data () {
       return {
-        repos: [],
-        selectedRepo: "",
-        charts: [],
-        selectedChart: "",
-        versions: [],
-        selectedVersion: "",
+        repo: "",
+        chart: "",
+        version: "",
         values: "",
         progressing: false,
         manifests: [],
-        generatedUrl: "",
+        generatedCommand: "",
         copied: false,
       }
     },
-    mounted() {
-      this.fetchRepoList()
-    },
     methods: {
-      async fetchRepoList() {
-        this.resetState()
-        const response = await api.fetchRepoList()
-        this.repos = response.data
+      setValues(values) {
+        this.values = values
       },
-      async fetchChartList() {
-        this.resetState()
-        const response = await api.fetchChartList(this.selectedRepo)
-        this.charts = response.data
+      setRepo(repo) {
+        this.repo = repo
       },
-      fetchVersionList() {
-        this.resetState()
-        for(let i=0; i < this.charts.length; i++) {
-          if(this.charts[i].name === this.selectedChart) {
-            this.versions = this.charts[i].versions
-            break
-          }
-        }
+      setChart(chart) {
+        this.chart = chart
       },
-      async fetchChartDetail() {
-        this.values = ""
-        this.progressing = true
-        const response = await api.fetchChartDetail(this.selectedRepo, this.selectedChart, this.selectedVersion)
-        this.progressing = false
-
-        this.values = yaml.stringify(response.data.values)
+      setVersion(version) {
+        this.version = version
       },
       async getManifest(){
-        const test = escape(this.values)
+        const values = escape(this.values)
      
         this.progressing = true
-        const response = await api.fetchManifest(this.selectedRepo, this.selectedChart, this.selectedVersion, test)
+        const response = await api.renderManifest(this.repo, this.chart, this.version, values)
         this.progressing = false
         this.manifests = response.data.manifests
-        this.generatedUrl = process.env.VUE_APP_API_SERVER_HOST + "/manifest/" + response.data.url
+        this.generatedCommand = "kubectl apply -f " + process.env.VUE_APP_API_SERVER_HOST + response.data.url
       },
       contructChartName(repo) {
         return repo.name + " (" + repo.url + ")"
@@ -163,14 +112,14 @@
         this.versions = []
         this.manifests = []
         this.copied = false
-        this.generatedUrl = ""
+        this.generatedCommand = ""
         this.values = ""
       },
       highlighter(values) {
         return highlight(values, languages.yaml);
       },
       copyGeneratedURL() {
-        navigator.clipboard.writeText(this.generatedUrl);
+        navigator.clipboard.writeText(this.generatedCommand);
         this.copied = true
       }
     }

@@ -1,13 +1,13 @@
 <template>
   <v-container>
-    {{ fileName }}
+    {{ message }}
     <v-row>
       <v-col>
         <prism-editor
           class="my-editor overflow-x-auto" 
-          v-model="code"
-          :highlight="highlighter"
+          v-model="data"
           line-numbers
+          :highlight="highlighter"
           :readonly="readonly"
         >
         </prism-editor>
@@ -19,7 +19,6 @@
 <script>
   import { PrismEditor } from 'vue-prism-editor';
   import 'vue-prism-editor/dist/prismeditor.min.css';
-
   import { highlight, languages } from 'prismjs/components/prism-core';
   import 'prismjs/components/prism-clike';
   import 'prismjs/components/prism-yaml';
@@ -37,14 +36,14 @@
     },
     props: [
       "code",
-      "fileName",
-      "readonly"
+      "readonly",
+      "message"
     ],
     methods: {
       highlighter(values) {
         return highlight(values, languages.yaml);
       },
-    }
+    },
   }
 </script>
 
