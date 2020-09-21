@@ -4,11 +4,12 @@ import (
 	"chart-viewer/model"
 	"chart-viewer/service"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type handler struct {
@@ -94,13 +95,15 @@ func (h *handler) RenderManifestsHandler(w http.ResponseWriter, r *http.Request)
 	fileLocation := fmt.Sprintf("/tmp/%s-values.yaml", time.Now().Format("20060102150405"))
 	err := ioutil.WriteFile(fileLocation, valueBytes, 0644)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Cannot store values to file: " + err.Error())
+		respondWithError(w, http.StatusInternalServerError, "Cannot store values to file: "+err.Error())
+		return
 	}
 
 	valueFile := []string{fileLocation}
 	err, manifests := h.service.RenderManifest(repoName, chartName, chartVersion, valueFile)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Error rendering manifest: " + err.Error())
+		respondWithError(w, http.StatusInternalServerError, "Error rendering manifest: "+err.Error())
+		return
 	}
 
 	respondWithJSON(w, http.StatusOK, manifests)
