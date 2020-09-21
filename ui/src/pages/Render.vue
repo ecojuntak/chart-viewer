@@ -8,6 +8,9 @@
     />
 
     <v-row v-if="values !='' && manifests.length == 0">
+      <v-alert type="error" dense outlined cols="12" v-if="errorMessage != ''">
+        {{ errorMessage }}
+      </v-alert>
       <v-col cols="12">
         <p>
           Customize the <code>values.yaml</code> below
@@ -81,6 +84,7 @@
         manifests: [],
         generatedCommand: "",
         copied: false,
+        errorMessage: ""
       }
     },
     methods: {
@@ -89,12 +93,15 @@
       },
       setRepo(repo) {
         this.repo = repo
+        this.resetState()
       },
       setChart(chart) {
         this.chart = chart
+        this.resetState()
       },
       setVersion(version) {
         this.version = version
+        this.resetState()
       },
       async getManifest(){
         const values = escape(this.values)
@@ -102,8 +109,13 @@
         this.progressing = true
         const response = await api.renderManifest(this.repo, this.chart, this.version, values)
         this.progressing = false
-        this.manifests = response.data.manifests
-        this.generatedCommand = "kubectl apply -f " + process.env.VUE_APP_API_SERVER_HOST + response.data.url
+
+        if(response.response.status == 500) {
+          this.errorMessage = response.response.data.error
+        } else {
+          this.manifests = response.data.manifests
+          this.generatedCommand = "kubectl apply -f " + process.env.VUE_APP_API_SERVER_HOST + response.data.url
+        }
       },
       contructChartName(repo) {
         return repo.name + " (" + repo.url + ")"
@@ -114,6 +126,7 @@
         this.copied = false
         this.generatedCommand = ""
         this.values = ""
+        this.errorMessage = ""
       },
       highlighter(values) {
         return highlight(values, languages.yaml);

@@ -18,6 +18,9 @@
 
     <v-row v-if="firstManifests.length == 0 && secondManifests.length == 0">
       <v-col v-if="firstValues != ''" cols="6">
+        <v-alert type="error" dense outlined cols="12" v-if="firstErrorMessage != ''">
+          {{ firstErrorMessage }}
+        </v-alert>
         <code>values.yaml</code> for version {{ firstVersion }}
         <prism-editor
           class="my-editor overflow-x-auto" 
@@ -29,6 +32,9 @@
       </v-col>
 
       <v-col v-if="secondValues != ''" cols="6">
+        <v-alert type="error" dense outlined cols="12" v-if="secondErrorMessage != ''">
+          {{ secondErrorMessage }}
+        </v-alert>
         <code>values.yaml</code> for version {{ secondVersion }}
         <prism-editor
           class="my-editor overflow-x-auto" 
@@ -80,20 +86,34 @@
         secondVersion: "",
         firstManifests: [],
         secondManifests: [],
-        progressing: false
+        progressing: false,
+        firstErrorMessage: "",
+        secondErrorMessage: "",
       }
     },
     methods: {
       async renderBothManifest() {
         this.progressing = true
-        this.firstManifests = await this.renderManifests(this.firstValues, this.firstVersion)
-        this.secondManifests = await this.renderManifests(this.secondValues, this.secondVersion)
+
+        const firstResponse = await this.renderManifests(this.firstValues, this.firstVersion)
+        if(firstResponse.response.status == 500) {
+          this.firstErrorMessage = firstResponse.response.data.error
+        } else {
+          this.firstManifests = firstResponse.data.manifests
+        }
+
+        const secondResponse = await this.renderManifests(this.secondValues, this.secondVersion)
+        if(secondResponse.response.status == 500) {
+          this.secondErrorMessage = secondResponse.response.data.error
+        } else {
+          this.secondManifests = secondResponse.data.manifests
+        }
+
         this.progressing = false
       },
       async renderManifests (values, version) {
         const escaptedValues = escape(values)
-        const response = await api.renderManifest(this.repo, this.chart, version, escaptedValues)
-        return response.data.manifests
+        return await api.renderManifest(this.repo, this.chart, version, escaptedValues)
       },
       setFirstValues(values) {
         this.firstValues = values
