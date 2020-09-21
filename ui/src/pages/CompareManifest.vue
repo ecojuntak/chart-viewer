@@ -96,15 +96,15 @@
         this.progressing = true
 
         const firstResponse = await this.renderManifests(this.firstValues, this.firstVersion)
-        if(firstResponse.response.status == 500) {
-          this.firstErrorMessage = firstResponse.response.data.error
+        if(firstResponse.status == 500) {
+          this.firstErrorMessage = firstResponse.data.error
         } else {
           this.firstManifests = firstResponse.data.manifests
         }
 
         const secondResponse = await this.renderManifests(this.secondValues, this.secondVersion)
-        if(secondResponse.response.status == 500) {
-          this.secondErrorMessage = secondResponse.response.data.error
+        if(secondResponse.status == 500) {
+          this.secondErrorMessage = secondResponse.data.error
         } else {
           this.secondManifests = secondResponse.data.manifests
         }

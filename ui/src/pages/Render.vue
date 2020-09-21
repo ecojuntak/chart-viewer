@@ -110,8 +110,8 @@
         const response = await api.renderManifest(this.repo, this.chart, this.version, values)
         this.progressing = false
 
-        if(response.response.status == 500) {
-          this.errorMessage = response.response.data.error
+        if(response.status == 500) {
+          this.errorMessage = response.data.error
         } else {
           this.manifests = response.data.manifests
           this.generatedCommand = "kubectl apply -f " + process.env.VUE_APP_API_SERVER_HOST + response.data.url

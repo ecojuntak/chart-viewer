@@ -17,7 +17,7 @@ async function fetchChart(repoName, chartName, chartVersion) {
 async function renderManifest(repoName, chartName, chartVersion, values) {
     return await axios.get(baseURL + '/charts/manifests/render/' + repoName + '/' + chartName + '/' + chartVersion + '?values=' + values)
     .then(res => res)
-    .catch(err => err)
+    .catch(err => err.response)
 }
 
 module.exports = {
