@@ -12,6 +12,7 @@ test:
 
 run:build
 	CHART_REPOS='${CHART_REPOS}' ./bin/app
+	./bin/app serve
 
 package:
 	docker build . -t ecojuntak/${APP_NAME}:${APP_VERSION} -t ecojuntak/${APP_NAME}:latest
