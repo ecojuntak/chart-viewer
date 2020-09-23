@@ -19,7 +19,7 @@ import (
 )
 
 type Helm interface {
-	GetValues(chartUrl, chartName, chartVersion string) map[string]interface{}
+	GetValues(chartUrl, chartName, chartVersion string) (error, map[string]interface{})
 	GetManifest(chartUrl, chartName, chartVersion string) []model.Template
 	RenderManifest(chartUrl, chartName, chartVersion string, files []string) (error, []model.Manifest)
 }
@@ -51,7 +51,7 @@ func NewHelmClient(repository repository.Repository) Helm {
 	}
 }
 
-func (h helm) GetValues(chartUrl, chartName, chartVersion string) map[string]interface{} {
+func (h helm) GetValues(chartUrl, chartName, chartVersion string) (error, map[string]interface{}) {
 	log.Printf("getting %s:%s from remote\n", chartName, chartVersion)
 
 	h.client.ChartPathOptions.Version = chartVersion
@@ -59,12 +59,12 @@ func (h helm) GetValues(chartUrl, chartName, chartVersion string) map[string]int
 	h.client.RepoURL = chartUrl
 	cp, err := h.client.ChartPathOptions.LocateChart(chartName, settings)
 	if err != nil {
-		panic(err)
+		return err, nil
 	}
 
 	chartRequested, _ := loader.Load(cp)
 
-	return chartRequested.Values
+	return nil, chartRequested.Values
 }
 
 func (h helm) GetManifest(chartUrl, chartName, chartVersion string) []model.Template {

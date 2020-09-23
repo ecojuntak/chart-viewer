@@ -15,32 +15,50 @@ import (
 )
 
 func NewServeCommand() *cobra.Command {
+	defaultHost := os.Getenv("APP_HOST")
+	defaultPort := os.Getenv("APP_PORT")
+	defaultRedisHost := os.Getenv("REDIS_HOST")
+	defaultRedisPort := os.Getenv("REDIS_PORT")
+
 	command := cobra.Command{
 		Use:     "serve",
 		Short:   "Start the http server",
-		Example: "chart-viewer serve",
+		Example: "chart-viewer serve --host 127.0.0.1 --port 9999 --redis-host 127.0.0.1 --redis-port 6379",
 		Run: func(cmd *cobra.Command, args []string) {
-			r := createRouter()
+			host := defaultHost
+			port := defaultPort
+			redisHost := defaultRedisHost
+			redisPort := defaultRedisPort
 
-			host := os.Getenv("HT_HOST")
-			port := os.Getenv("HT_PORT")
-
+			redisAddress := fmt.Sprintf("%s:%s", redisHost, redisPort)
 			address := fmt.Sprintf("%s:%s", host, port)
+
+			err, repo := repository.NewRepository(redisAddress)
+			if err != nil {
+				fmt.Printf("cannot connect to redis: %s\n", err)
+				return
+			}
+
+			helmClient := helm.NewHelmClient(repo)
+			svc := service.NewService(helmClient, repo)
+			r := createRouter(svc)
 
 			log.Printf("server run on http://%s\n", address)
 			log.Fatal(http.ListenAndServe(address, r))
 		},
 	}
 
+	command.Flags().StringVar(&defaultHost, "host", "127.0.0.1", "[Optional] App host address")
+	command.Flags().StringVar(&defaultPort, "port", "9999", "[Optional] App host port")
+	command.Flags().StringVar(&defaultRedisHost, "redis-host", "127.0.0.1", "[Optional] Redis host address")
+	command.Flags().StringVar(&defaultRedisPort, "redis-port", "6379", "[Optional] Redis host port")
+
 	return &command
 }
 
-func createRouter() *mux.Router {
+func createRouter(svc service.Service) *mux.Router {
 	r := mux.NewRouter()
 
-	repo := repository.NewRepository()
-	helmClient := helm.NewHelmClient(repo)
-	svc := service.NewService(helmClient, repo)
 	appHandler := handler.NewHandler(svc)
 
 	r.Use(appHandler.CORS)

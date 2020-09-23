@@ -13,20 +13,48 @@ type Service struct {
 	mock.Mock
 }
 
+// GetChart provides a mock function with given fields: repoName, chartName, chartVersion
+func (_m *Service) GetChart(repoName string, chartName string, chartVersion string) (error, model.ChartDetail) {
+	ret := _m.Called(repoName, chartName, chartVersion)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
+		r0 = rf(repoName, chartName, chartVersion)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	var r1 model.ChartDetail
+	if rf, ok := ret.Get(1).(func(string, string, string) model.ChartDetail); ok {
+		r1 = rf(repoName, chartName, chartVersion)
+	} else {
+		r1 = ret.Get(1).(model.ChartDetail)
+	}
+
+	return r0, r1
+}
+
 // GetCharts provides a mock function with given fields: repoName
-func (_m *Service) GetCharts(repoName string) []model.Chart {
+func (_m *Service) GetCharts(repoName string) (error, []model.Chart) {
 	ret := _m.Called(repoName)
 
-	var r0 []model.Chart
-	if rf, ok := ret.Get(0).(func(string) []model.Chart); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
 		r0 = rf(repoName)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.Chart)
+		r0 = ret.Error(0)
+	}
+
+	var r1 []model.Chart
+	if rf, ok := ret.Get(1).(func(string) []model.Chart); ok {
+		r1 = rf(repoName)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]model.Chart)
 		}
 	}
 
-	return r0
+	return r0, r1
 }
 
 // GetRepos provides a mock function with given fields:
@@ -76,19 +104,26 @@ func (_m *Service) GetTemplates(repoName string, chartName string, chartVersion 
 }
 
 // GetValues provides a mock function with given fields: repoName, chartName, chartVersion
-func (_m *Service) GetValues(repoName string, chartName string, chartVersion string) map[string]interface{} {
+func (_m *Service) GetValues(repoName string, chartName string, chartVersion string) (error, map[string]interface{}) {
 	ret := _m.Called(repoName, chartName, chartVersion)
 
-	var r0 map[string]interface{}
-	if rf, ok := ret.Get(0).(func(string, string, string) map[string]interface{}); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
 		r0 = rf(repoName, chartName, chartVersion)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]interface{})
+		r0 = ret.Error(0)
+	}
+
+	var r1 map[string]interface{}
+	if rf, ok := ret.Get(1).(func(string, string, string) map[string]interface{}); ok {
+		r1 = rf(repoName, chartName, chartVersion)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(map[string]interface{})
 		}
 	}
 
-	return r0
+	return r0, r1
 }
 
 // RenderManifest provides a mock function with given fields: repoName, chartName, chartVersion, values

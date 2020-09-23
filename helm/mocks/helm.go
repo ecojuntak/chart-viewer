@@ -30,19 +30,26 @@ func (_m *Helm) GetManifest(chartUrl string, chartName string, chartVersion stri
 }
 
 // GetValues provides a mock function with given fields: chartUrl, chartName, chartVersion
-func (_m *Helm) GetValues(chartUrl string, chartName string, chartVersion string) map[string]interface{} {
+func (_m *Helm) GetValues(chartUrl string, chartName string, chartVersion string) (error, map[string]interface{}) {
 	ret := _m.Called(chartUrl, chartName, chartVersion)
 
-	var r0 map[string]interface{}
-	if rf, ok := ret.Get(0).(func(string, string, string) map[string]interface{}); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
 		r0 = rf(chartUrl, chartName, chartVersion)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]interface{})
+		r0 = ret.Error(0)
+	}
+
+	var r1 map[string]interface{}
+	if rf, ok := ret.Get(1).(func(string, string, string) map[string]interface{}); ok {
+		r1 = rf(chartUrl, chartName, chartVersion)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(map[string]interface{})
 		}
 	}
 
-	return r0
+	return r0, r1
 }
 
 // RenderManifest provides a mock function with given fields: chartUrl, chartName, chartVersion, files

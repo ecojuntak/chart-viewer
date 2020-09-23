@@ -2,7 +2,6 @@ package repository
 
 import (
 	"github.com/go-redis/redis"
-	"os"
 )
 
 type Repository interface {
@@ -14,14 +13,19 @@ type repository struct {
 	redisClient *redis.Client
 }
 
-func NewRepository() Repository {
-	host := os.Getenv("REDIS_HOST")
-	port := os.Getenv("REDIS_PORT")
+func NewRepository(redisAddress string) (error, Repository) {
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: redisAddress,
+	})
 
-	return repository{
-		redisClient: redis.NewClient(&redis.Options{
-			Addr: host + ":" + port,
-		}),
+	status := redisClient.Ping()
+	err := status.Err()
+	if err != nil {
+		return err, nil
+	}
+
+	return nil, repository{
+		redisClient: redisClient,
 	}
 }
 

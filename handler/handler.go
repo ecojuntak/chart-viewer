@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"chart-viewer/model"
 	"chart-viewer/service"
 	"fmt"
 	"io/ioutil"
@@ -30,7 +29,12 @@ func (h *handler) GetReposHandler(w http.ResponseWriter, r *http.Request) {
 func (h *handler) GetChartsHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	repoName := vars["repo-name"]
-	charts := h.service.GetCharts(repoName)
+	err, charts := h.service.GetCharts(repoName)
+	if err != nil {
+		errMessage := fmt.Sprintf("Cannot get charts from repos %s: %s", repoName, err.Error())
+		respondWithError(w, http.StatusInternalServerError, errMessage)
+		return
+	}
 
 	respondWithJSON(w, http.StatusOK, charts)
 }
@@ -40,12 +44,12 @@ func (h *handler) GetChartHandler(w http.ResponseWriter, r *http.Request) {
 	repoName := vars["repo-name"]
 	chartName := vars["chart-name"]
 	chartVersion := vars["chart-version"]
-	values := h.service.GetValues(repoName, chartName, chartVersion)
-	templates := h.service.GetTemplates(repoName, chartName, chartVersion)
 
-	chart := model.ChartDetail{
-		Values:    values,
-		Templates: templates,
+	err, chart := h.service.GetChart(repoName, chartName, chartVersion)
+	if err != nil {
+		errMessage := fmt.Sprintf("Cannot get chart %s/%s:%s : %s", repoName, chartName, chartVersion, err.Error())
+		respondWithError(w, http.StatusInternalServerError, errMessage)
+		return
 	}
 
 	respondWithJSON(w, http.StatusOK, chart)
@@ -56,7 +60,13 @@ func (h *handler) GetValuesHandler(w http.ResponseWriter, r *http.Request) {
 	repoName := vars["repo-name"]
 	chartName := vars["chart-name"]
 	chartVersion := vars["chart-version"]
-	values := h.service.GetValues(repoName, chartName, chartVersion)
+
+	err, values := h.service.GetValues(repoName, chartName, chartVersion)
+	if err != nil {
+		errMessage := fmt.Sprintf("Cannot get values of %s/%s:%s : %s", repoName, chartName, chartVersion, err.Error())
+		respondWithError(w, http.StatusInternalServerError, errMessage)
+		return
+	}
 
 	respondWithJSON(w, http.StatusOK, values)
 }

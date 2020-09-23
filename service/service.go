@@ -16,11 +16,12 @@ import (
 
 type Service interface {
 	GetRepos() []model.Repo
-	GetCharts(repoName string) []model.Chart
-	GetValues(repoName, chartName, chartVersion string) map[string]interface{}
+	GetCharts(repoName string) (error, []model.Chart)
+	GetValues(repoName, chartName, chartVersion string) (error, map[string]interface{})
 	GetTemplates(repoName, chartName, chartVersion string) []model.Template
 	RenderManifest(repoName, chartName, chartVersion string, values []string) (error, model.ManifestResponse)
 	GetStringifiedManifests(repoName, chartName, chartVersion, hash string) string
+	GetChart(repoName string, chartName string, chartVersion string) (error, model.ChartDetail)
 }
 
 type service struct {
@@ -43,14 +44,14 @@ func (s *service) GetRepos() []model.Repo {
 	return repos
 }
 
-func (s *service) GetCharts(repoName string) []model.Chart {
+func (s *service) GetCharts(repoName string) (error, []model.Chart) {
 	stringifiedCharts := s.repository.Get(repoName)
 	var cachedCharts []model.Chart
 	_ = json.Unmarshal([]byte(stringifiedCharts), &cachedCharts)
 
 	if len(cachedCharts) != 0 {
 		log.Printf("%s chart detail fetched from cache\n", repoName)
-		return cachedCharts
+		return nil, cachedCharts
 	}
 
 	url := s.getUrl(repoName)
@@ -58,7 +59,7 @@ func (s *service) GetCharts(repoName string) []model.Chart {
 	log.Printf("out going call: %s\n", url)
 	response, err := http.Get(url + "/index.yaml")
 	if err != nil {
-		panic(err)
+		return err, nil
 	}
 
 	content, err := ioutil.ReadAll(response.Body)
@@ -66,7 +67,7 @@ func (s *service) GetCharts(repoName string) []model.Chart {
 	repoDetail := new(model.RepoDetailResponse)
 	err = yaml.Unmarshal(content, &repoDetail)
 	if err != nil {
-		panic(err)
+		return err, nil
 	}
 
 	var chartNames []string
@@ -87,17 +88,17 @@ func (s *service) GetCharts(repoName string) []model.Chart {
 	chartsByte, _ := json.Marshal(charts)
 	s.repository.Set(repoName, string(chartsByte))
 
-	return charts
+	return nil, charts
 }
 
-func (s *service) GetValues(repoName, chartName, chartVersion string) map[string]interface{} {
+func (s *service) GetValues(repoName, chartName, chartVersion string) (error, map[string]interface{}) {
 	cacheKey := fmt.Sprintf("value-%s-%s-%s", repoName, chartName, chartVersion)
 	stringifiedValues := s.repository.Get(cacheKey)
 	var cachedValues map[string]interface{}
 	_ = json.Unmarshal([]byte(stringifiedValues), &cachedValues)
 	if len(cachedValues) != 0 {
 		log.Printf("value-%s-%s-%s chart values fetched from cache\n", repoName, chartName, chartVersion)
-		return cachedValues
+		return nil, cachedValues
 	}
 
 	var url string
@@ -109,11 +110,14 @@ func (s *service) GetValues(repoName, chartName, chartVersion string) map[string
 		}
 	}
 
-	values := s.helmClient.GetValues(url, chartName, chartVersion)
+	err, values := s.helmClient.GetValues(url, chartName, chartVersion)
+	if err != nil {
+		return err, nil
+	}
 	valuesByte, _ := json.Marshal(values)
 	s.repository.Set(cacheKey, string(valuesByte))
 
-	return values
+	return nil, values
 }
 
 func (s *service) GetTemplates(repoName, chartName, chartVersion string) []model.Template {
@@ -187,6 +191,19 @@ func (s *service) GetStringifiedManifests(repoName, chartName, chartVersion, has
 
 	_ = json.Unmarshal([]byte(stringifiedManifest), &cachedManifests)
 	return stringfyManifest(cachedManifests.Manifests)
+}
+
+func (s *service) GetChart(repoName string, chartName string, chartVersion string) (error, model.ChartDetail) {
+	err, values := s.GetValues(repoName, chartName, chartVersion)
+	if err != nil {
+		return err, model.ChartDetail{}
+	}
+	templates := s.GetTemplates(repoName, chartName, chartVersion)
+
+	return nil, model.ChartDetail{
+		Values:    values,
+		Templates: templates,
+	}
 }
 
 func hashFileContent(fileLocation string) string {

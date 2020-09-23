@@ -37,7 +37,8 @@ func TestService_GetChartsFromCache(t *testing.T) {
 	helm := new(helmMock.Helm)
 	repository.On("Get", "stable").Return(stringifiedChart)
 	svc := service.NewService(helm, repository)
-	charts := svc.GetCharts("stable")
+	err, charts := svc.GetCharts("stable")
+	assert.NoError(t, err)
 
 	expectedCharts := []model.Chart{
 		{
@@ -58,7 +59,8 @@ func TestService_GetValuesFromCache(t *testing.T) {
 	helm := new(helmMock.Helm)
 	repository.On("Get", "value-stable-app-deploy-v0.0.1").Return(stringifiedValues)
 	svc := service.NewService(helm, repository)
-	values := svc.GetValues("stable", "app-deploy", "v0.0.1")
+	err, values := svc.GetValues("stable", "app-deploy", "v0.0.1")
+	assert.NoError(t, err)
 
 	expectedValues := map[string]interface{}{
 		"affinity": map[string]interface{}{},

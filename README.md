@@ -5,6 +5,7 @@ You can try the demo [here](https://chart-viewer-84975.web.app)
 A simple web app to help you inspect helm chart. So far, you can use this tool for:
 - Inspect helm chart; as simple as showing all the chart templates
 - Compare template between two versions; showing changes on git-like view.
+- Compare rendered manifest between two versions; showing changes on git-like view.
 - Render kubernetes manifest; modify the `values.yaml` and render the manifest. You will get a link that you can use to directly create the kubernetes resources on your cluster, as simple as `kubectl apply -f http://the.given.link` 
 
 ## Prerequisite

@@ -47,7 +47,7 @@ func TestHandler_GetChartsHandler(t *testing.T) {
 		{Name: "job-deployment", Versions: []string{"v0.2.0", "v0.2.1"}},
 	}
 	serviceMock := new(mocks.Service)
-	serviceMock.On("GetCharts", "stable").Return(charts).Once()
+	serviceMock.On("GetCharts", "stable").Return(nil, charts).Once()
 	appHandler := handler.NewHandler(serviceMock)
 
 	req, err := http.NewRequest("GET", "/charts/stable", nil)
@@ -81,8 +81,7 @@ func TestHandler_GetChartHandler(t *testing.T) {
 		},
 	}
 	serviceMock := new(mocks.Service)
-	serviceMock.On("GetValues", "repo-name", "chart-name", "chart-version").Return(chart.Values).Once()
-	serviceMock.On("GetTemplates", "repo-name", "chart-name", "chart-version").Return(chart.Templates).Once()
+	serviceMock.On("GetChart", "repo-name", "chart-name", "chart-version").Return(nil, chart).Once()
 	appHandler := handler.NewHandler(serviceMock)
 
 	req, err := http.NewRequest("GET", "/charts/repo-name/chart-name/chart-version", nil)
@@ -121,7 +120,7 @@ func TestHandler_GetValuesHandler(t *testing.T) {
 		},
 	}
 	serviceMock := new(mocks.Service)
-	serviceMock.On("GetValues", "repo-name", "chart-name", "chart-version").Return(values).Once()
+	serviceMock.On("GetValues", "repo-name", "chart-name", "chart-version").Return(nil, values).Once()
 	appHandler := handler.NewHandler(serviceMock)
 
 	req, err := http.NewRequest("GET", "/charts/values/repo-name/chart-name/chart-version", nil)

@@ -11,8 +11,13 @@ test:
 	go test ./...
 
 run:build
-	CHART_REPOS='${CHART_REPOS}' ./bin/app
 	./bin/app serve
+
+seed:build
+	CHART_REPOS='${CHART_REPOS}' ./bin/app seed
+
+help:build
+	./bin/app --help
 
 package:
 	docker build . -t ecojuntak/${APP_NAME}:${APP_VERSION} -t ecojuntak/${APP_NAME}:latest
