@@ -1,6 +1,6 @@
 <template>
   <v-app id="app">
-    <v-navigation-drawer v-model="drawer" app clipped>
+    <v-navigation-drawer v-model="drawer" app clipped permanent expand-on-hover>
       <v-list>
         <router-link to="/" class="no-style">
           <v-list-item link>
@@ -21,7 +21,9 @@
               <v-icon>mdi-file-compare</v-icon>
             </v-list-item-action>
             <v-list-item-content>
-              Compare 
+              <v-list-item-title>
+                Compare
+              </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </router-link>
@@ -32,7 +34,9 @@
               <v-icon>mdi-tray-full</v-icon>
             </v-list-item-action>
             <v-list-item-content>
-              Render Manifest 
+              <v-list-item-title>
+                Render Manifest
+              </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </router-link>
@@ -43,7 +47,9 @@
               <v-icon>mdi-select-compare</v-icon>
             </v-list-item-action>
             <v-list-item-content>
-              Compare Manifest 
+              <v-list-item-title>
+                Compare Manifest
+              </v-list-item-title> 
             </v-list-item-content>
           </v-list-item>
         </router-link>
