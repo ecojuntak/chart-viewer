@@ -70,36 +70,60 @@
     data () {
       return {
         repos: [],
-        selectedRepo: "",
+        selectedRepo: this.$route.query.repo || '',
         charts: [],
-        selectedChart: "",
+        selectedChart: this.$route.query.chart || '',
         versions: [],
-        firstSelectedVersion: "",
-        secondSelectedVersion: "",
+        firstSelectedVersion: this.$route.query.firstVersion || '',
+        secondSelectedVersion: this.$route.query.secondVersion || '',
         firstValues: "",
         secondValues: "",
         firstTemplates: [],
         secondTemplates: [],
-        progressing: false
+        progressing: false,
+        initailLoad: true
       }
     },
-    mounted() {
-      this.fetchRepos()
+    async mounted() {
+      await this.fetchRepos()
+      if(this.selectedRepo !== '') {
+        await this.fetchCharts()
+      }
+
+      if(this.selectedRepo !== '' && this.selectedChart !== '') {
+        await this.fetchVersionList()
+      }
+
+      if(this.selectedRepo !== '' && this.selectedChart !== '' && this.firstSelectedVersion !== '' && this.secondSelectedVersion !== '') {
+        await this.fetchFirstChartDetail()
+        await this.fetchSecondChartDetail()
+      }
+
+      this.initailLoad = false
     },
     methods: {
       async fetchRepos() {
+         if(!this.initailLoad) {
+          this.resetState()
+        }
+
         const response = await api.fetchRepos()
         this.repos = response.data
       },
       async fetchCharts() {
-        this.resetState()
-        this.selectedChart = ""
+        if(!this.initailLoad) {
+          this.resetState()
+          this.selectedChart = ''
+        }
 
         const response = await api.fetchCharts(this.selectedRepo)
         this.charts = response.data
+        this.updateQueryParams()
       },
       fetchVersionList() {
-        this.resetState()
+        if(!this.initailLoad) {
+          this.resetState()
+        }
 
         for(let i=0; i < this.charts.length; i++) {
           if(this.charts[i].name === this.selectedChart) {
@@ -107,6 +131,8 @@
             break
           }
         }
+
+        this.updateQueryParams()
       },
       async fetchFirstChartDetail() {
         this.firstValues = ""
@@ -123,6 +149,8 @@
           name: 'values.yaml',
           content: this.firstValues
         })
+
+        this.updateQueryParams()
       },
       async fetchSecondChartDetail() {
         this.secondValues = ""
@@ -139,6 +167,8 @@
           name: 'values.yaml',
           content: this.secondValues  
         })
+        
+        this.updateQueryParams()
       },
       simplifyTemplateName(templates) {
         var temps = []
@@ -159,8 +189,21 @@
         this.versions = []
         this.firstTemplates = []
         this.secondTemplates = []
-        this.firstSelectedVersion = ""
-        this.secondSelectedVersion = ""
+        this.firstSelectedVersion = ''
+        this.secondSelectedVersion = ''
+      },
+      updateQueryParams() {
+        this.$router.push(
+          {
+            path: this.$route.path,
+            query: {
+              repo: this.selectedRepo,
+              chart: this.selectedChart,
+              firstVersion: this.firstSelectedVersion,
+              secondVersion: this.secondSelectedVersion
+            } 
+          }
+        )
       }
     },
     watch: {
@@ -184,9 +227,11 @@
       },
       firstSelectedVersion() {
         this.$emit("firstSelectedVersionChanged", this.firstSelectedVersion)
+        this.updateQueryParams()
       },
       secondSelectedVersion() {
         this.$emit("secondSelectedVersionChanged", this.secondSelectedVersion)
+        this.updateQueryParams()
       }
     }
   }

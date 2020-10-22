@@ -50,32 +50,52 @@
     data () {
       return {
         repos: [],
-        selectedRepo: "",
+        selectedRepo: this.$route.query.repo || '',
         charts: [],
-        selectedChart: "",
+        selectedChart: this.$route.query.chart || '',
         versions: [],
-        selectedVersion: "",
-        values: "",
+        selectedVersion: this.$route.query.version || '',
+        values: '',
         templates: [],
-        progressing: false
+        progressing: false,
+        initailLoad: true
       }
     },
-    mounted() {
-      this.fetchRepoList()
+    async mounted() {
+      await this.fetchRepoList()
+      if(this.selectedRepo !== '') {
+        await this.fetchChartList()
+      }
+
+      if(this.selectedRepo !== '' && this.selectedChart !== '') {
+        await this.fetchVersionList()
+      }
+
+      if(this.selectedRepo !== '' && this.selectedChart !== '' && this.selectedVersion !== '') {
+        await this.fetchChart()
+      }
+
+      this.initailLoad = false
     },
     methods: {
       async fetchRepoList() {
-        this.resetState()
+        if(!this.initailLoad) {
+          this.resetState()
+        }
 
         const response = await api.fetchRepos()
         this.repos = response.data
       },
       async fetchChartList() {
-        this.resetState()
-        this.selectedChart = ""
+        if(!this.initailLoad) {
+          this.resetState()
+          this.selectedChart = ""
+          this.selectedVersion = ""
+        }
 
         const response = await api.fetchCharts(this.selectedRepo)
         this.charts = response.data
+        this.updateQueryParams()
       },
       async fetchChart() {
         this.values = ""
@@ -92,6 +112,7 @@
           name: "values.yaml",
           content: this.values
         })
+        this.updateQueryParams()
       },
       fetchVersionList() {
         this.templates = []
@@ -101,6 +122,7 @@
             break
           }
         }
+        this.updateQueryParams()
       },
       simplifyTemplateName(templates) {
         var temps = []
@@ -120,6 +142,18 @@
       resetState() {
         this.versions = []
         this.templates = []
+      },
+      updateQueryParams() {
+        this.$router.push(
+          {
+            path: this.$route.path,
+            query: {
+              repo: this.selectedRepo,
+              chart: this.selectedChart,
+              version: this.selectedVersion
+            } 
+          }
+        )
       }
     },
     watch: {
