@@ -1,9 +1,9 @@
 package handler_test
 
 import (
-	"chart-viewer/handler"
-	"chart-viewer/model"
-	"chart-viewer/service/mocks"
+	"chart-viewer/pkg/model"
+	"chart-viewer/pkg/server/handler"
+	"chart-viewer/pkg/server/service/mocks"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/kinbiko/jsonassert"
@@ -16,7 +16,7 @@ import (
 )
 
 func TestHandler_GetRepos(t *testing.T) {
-	repos := []model.Repo {
+	repos := []model.Repo{
 		{Name: "stable", URL: "https://repo.stable"},
 	}
 	serviceMock := new(mocks.Service)

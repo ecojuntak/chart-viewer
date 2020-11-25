@@ -1,10 +1,10 @@
 package chartviewer
 
 import (
-	"chart-viewer/handler"
-	"chart-viewer/helm"
-	"chart-viewer/repository"
-	"chart-viewer/service"
+	"chart-viewer/pkg/helm"
+	"chart-viewer/pkg/repository"
+	"chart-viewer/pkg/server/handler"
+	"chart-viewer/pkg/server/service"
 	"fmt"
 	"log"
 	"net/http"

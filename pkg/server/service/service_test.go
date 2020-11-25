@@ -1,10 +1,10 @@
 package service_test
 
 import (
-	helmMock "chart-viewer/helm/mocks"
-	"chart-viewer/model"
-	repoMock "chart-viewer/repository/mocks"
-	"chart-viewer/service"
+	helmMock "chart-viewer/pkg/helm/mocks"
+	"chart-viewer/pkg/model"
+	repoMock "chart-viewer/pkg/repository/mocks"
+	"chart-viewer/pkg/server/service"
 	"crypto/md5"
 	"fmt"
 	"github.com/stretchr/testify/assert"

@@ -2,8 +2,8 @@ package helm
 
 import (
 	"bytes"
-	"chart-viewer/model"
-	"chart-viewer/repository"
+	"chart-viewer/pkg/model"
+	"chart-viewer/pkg/repository"
 	"fmt"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"

@@ -1,10 +1,10 @@
 package chartviewer
 
 import (
-	"chart-viewer/helm"
-	"chart-viewer/model"
-	"chart-viewer/repository"
-	"chart-viewer/service"
+	"chart-viewer/pkg/helm"
+	"chart-viewer/pkg/model"
+	"chart-viewer/pkg/repository"
+	"chart-viewer/pkg/server/service"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -71,7 +71,7 @@ func seedRepo(repo repository.Repository, seedPath string) error {
 		return nil
 	}
 
-	log.Println("populating reposistories from environment varaible CHART_REPOS")
+	log.Println("populating repositories from environment variable CHART_REPOS")
 	stringifiedRepos := os.Getenv("CHART_REPOS")
 	repo.Set("repos", stringifiedRepos)
 	return nil
@@ -101,7 +101,11 @@ func pullChart(svc service.Service, repo model.Repo) {
 		versions := chart.Versions
 		for _, version := range versions {
 			log.Printf("populating %s/%s:%s\n", repo.Name, chart.Name, version)
-			svc.GetChart(repo.Name, chart.Name, version)
+			err, _ := svc.GetChart(repo.Name, chart.Name, version)
+
+			if err != nil {
+				log.Printf("error populating charts %s: %s", repo.Name, err)
+			}
 		}
 	}
 }

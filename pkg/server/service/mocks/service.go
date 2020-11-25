@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	model "chart-viewer/model"
+	model "chart-viewer/pkg/model"
 
 	mock "github.com/stretchr/testify/mock"
 )

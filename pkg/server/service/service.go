@@ -2,9 +2,9 @@ package service
 
 import (
 	"bytes"
-	"chart-viewer/helm"
-	"chart-viewer/model"
-	"chart-viewer/repository"
+	"chart-viewer/pkg/helm"
+	"chart-viewer/pkg/model"
+	"chart-viewer/pkg/repository"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
