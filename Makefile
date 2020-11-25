@@ -5,7 +5,7 @@ APP_VERSION = $(shell cat VERSION)
 CHART_REPOS = $(shell cat ./seed.json)
 
 build:
-	go build -o bin/app .
+	go build -o bin/app cmd/main.go
 
 test:
 	go test ./...
@@ -25,3 +25,6 @@ package:
 publish-image:
 	docker push ecojuntak/${APP_NAME}:${APP_VERSION} 
 	docker push ecojuntak/${APP_NAME}:latest
+
+copy-config:
+	cp .env.example .env

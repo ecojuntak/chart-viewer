@@ -1,4 +1,4 @@
-package cmd
+package chartviewer
 
 import (
 	"chart-viewer/helm"
