@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"chart-viewer/service"
+	"chart-viewer/pkg/server/service"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"

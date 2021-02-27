@@ -2,9 +2,9 @@ package handler_test
 
 import (
 	"bytes"
-	"chart-viewer/handler"
-	"chart-viewer/model"
-	"chart-viewer/service/mocks"
+	"chart-viewer/pkg/server/handler"
+	"chart-viewer/pkg/model"
+	"chart-viewer/pkg/server/service/mocks"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/kinbiko/jsonassert"

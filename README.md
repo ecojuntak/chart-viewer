@@ -17,6 +17,7 @@ A simple web app to help you inspect helm chart. So far, you can use this tool f
 ```shell script
 $ git clone https://github.com/ecojuntak/chart-viewer.git
 $ cd chart-viewer/
+$ make copy-config
 $ CHART_REPOS=`cat ./seed.json` docker-compose up
 ```
 It will run three containers on your local, `redis`, `server`, and `ui`.
