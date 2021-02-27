@@ -16,9 +16,9 @@
       ></v-progress-linear>
     </v-row>
 
-    <v-row v-if="firstManifests.length == 0 && secondManifests.length == 0">
-      <v-col v-if="firstValues != ''" cols="6">
-        <v-alert type="error" dense outlined cols="12" v-if="firstErrorMessage != ''">
+    <v-row v-if="firstManifests.length === 0 && secondManifests.length === 0">
+      <v-col v-if="firstValues !== ''" cols="6">
+        <v-alert type="error" dense outlined cols="12" v-if="firstErrorMessage !== ''">
           {{ firstErrorMessage }}
         </v-alert>
         <code>values.yaml</code> for version {{ firstVersion }}
@@ -31,8 +31,8 @@
         />
       </v-col>
 
-      <v-col v-if="secondValues != ''" cols="6">
-        <v-alert type="error" dense outlined cols="12" v-if="secondErrorMessage != ''">
+      <v-col v-if="secondValues !== ''" cols="6">
+        <v-alert type="error" dense outlined cols="12" v-if="secondErrorMessage !== ''">
           {{ secondErrorMessage }}
         </v-alert>
         <code>values.yaml</code> for version {{ secondVersion }}
@@ -47,11 +47,17 @@
 
       <v-btn block color="primary" dark 
         @click="renderBothManifest()" class="mt-2"
-        v-if="secondValues != '' && firstValues != ''">
+        v-if="secondValues !== '' && firstValues !== ''">
         Compare Manifest
       </v-btn>
     </v-row>
-    <v-row v-if="firstManifests.length != 0 && secondManifests.length != 0">
+
+    <v-row v-if="firstManifests.length !== 0 && secondManifests.length !== 0">
+      <div class="d-block pa-2">
+        <v-btn rounded color="primary" dark small @click="firstManifests = []; secondManifests = []">
+          <v-icon left>mdi-pencil</v-icon> Edit values.yaml
+        </v-btn>
+      </div>
       <diff-viewer :firstTemplates="firstManifests" :secondTemplates="secondManifests"> </diff-viewer>
     </v-row>
   </v-container>
@@ -96,14 +102,14 @@
         this.progressing = true
 
         const firstResponse = await this.renderManifests(this.firstValues, this.firstVersion)
-        if(firstResponse.status == 500) {
+        if(firstResponse.status === 500) {
           this.firstErrorMessage = firstResponse.data.error
         } else {
           this.firstManifests = firstResponse.data.manifests
         }
 
         const secondResponse = await this.renderManifests(this.secondValues, this.secondVersion)
-        if(secondResponse.status == 500) {
+        if(secondResponse.status === 500) {
           this.secondErrorMessage = secondResponse.data.error
         } else {
           this.secondManifests = secondResponse.data.manifests
@@ -112,8 +118,7 @@
         this.progressing = false
       },
       async renderManifests (values, version) {
-        const escaptedValues = escape(values)
-        return await api.renderManifest(this.repo, this.chart, version, escaptedValues)
+        return await api.renderManifest(this.repo, this.chart, version, values)
       },
       setFirstValues(values) {
         this.firstValues = values

@@ -1,8 +1,9 @@
 package handler_test
 
 import (
-	"chart-viewer/pkg/model"
+	"bytes"
 	"chart-viewer/pkg/server/handler"
+	"chart-viewer/pkg/model"
 	"chart-viewer/pkg/server/service/mocks"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -72,7 +73,7 @@ func TestHandler_GetChartsHandler(t *testing.T) {
 
 func TestHandler_GetChartHandler(t *testing.T) {
 	chart := model.ChartDetail{
-		Values: map[string]interface{}{"appPort": float64(8080) },
+		Values: map[string]interface{}{"appPort": float64(8080)},
 		Templates: []model.Template{
 			{
 				Name:    "deployment.yaml",
@@ -114,8 +115,8 @@ func TestHandler_GetChartHandler(t *testing.T) {
 func TestHandler_GetValuesHandler(t *testing.T) {
 	values := map[string]interface{}{
 		"values": map[string]interface{}{
-			"apiVersion": "app/Deployment",
-			"cpuRequest": 11,
+			"apiVersion":    "app/Deployment",
+			"cpuRequest":    11,
 			"enableService": true,
 		},
 	}
@@ -219,7 +220,7 @@ data:
 
 func TestHandler_RenderManifestsHandler(t *testing.T) {
 	manifests := model.ManifestResponse{
-		URL:       "/charts/manifests/repo-name/chart-name/chart-version/hash",
+		URL: "/charts/manifests/repo-name/chart-name/chart-version/hash",
 		Manifests: []model.Manifest{
 			{Name: "deployment.yaml", Content: "apiVersion: app/Deployment"},
 			{Name: "service.yaml", Content: "kind: Service"},
@@ -230,7 +231,8 @@ func TestHandler_RenderManifestsHandler(t *testing.T) {
 	serviceMock.On("RenderManifest", "repo-name", "chart-name", "chart-version", []string{fileLocation}).Return(nil, manifests).Once()
 	appHandler := handler.NewHandler(serviceMock)
 
-	req, err := http.NewRequest("GET", "/charts/templates/render/repo-name/chart-name/chart-version?values=affinity:{}", nil)
+	requestBody := []byte(`{"values": "affinity:{}"}`)
+	req, err := http.NewRequest("POST", "/charts/templates/render/repo-name/chart-name/chart-version", bytes.NewBuffer(requestBody))
 	assert.NoError(t, err)
 
 	recorder := httptest.NewRecorder()

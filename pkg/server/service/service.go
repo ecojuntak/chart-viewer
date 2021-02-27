@@ -153,7 +153,6 @@ func (s *service) RenderManifest(repoName, chartName, chartVersion string, value
 	var cachedManifests model.ManifestResponse
 	_ = json.Unmarshal([]byte(stringifiedManifest), &cachedManifests)
 
-	generatedUrl := fmt.Sprintf("/charts/manifests/%s/%s/%s/%s", repoName, chartName, chartVersion, hash)
 	if stringifiedManifest != "" {
 		log.Printf("manifest fetched from cache with key: %s\n", cacheKey)
 		return nil, cachedManifests
@@ -173,6 +172,7 @@ func (s *service) RenderManifest(repoName, chartName, chartVersion string, value
 		return err, model.ManifestResponse{}
 	}
 
+	generatedUrl := fmt.Sprintf("/api/v1/charts/manifests/%s/%s/%s/%s", repoName, chartName, chartVersion, hash)
 	manifestsResponse := model.ManifestResponse{
 		URL:       generatedUrl,
 		Manifests: manifests,

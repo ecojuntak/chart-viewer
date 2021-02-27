@@ -8,7 +8,7 @@ build:
 	go build -o bin/app cmd/main.go
 
 test:
-	go test ./...
+	go test -cover ./...
 
 run:build
 	./bin/app serve

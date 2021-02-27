@@ -63,13 +63,14 @@ func createRouter(svc service.Service) *mux.Router {
 
 	r.Use(appHandler.CORS)
 	r.Use(appHandler.LoggerMiddleware)
-	r.HandleFunc("/repos", appHandler.GetReposHandler)
-	r.HandleFunc("/charts/{repo-name}", appHandler.GetChartsHandler)
-	r.HandleFunc("/charts/{repo-name}/{chart-name}/{chart-version}", appHandler.GetChartHandler)
-	r.HandleFunc("/charts/values/{repo-name}/{chart-name}/{chart-version}", appHandler.GetValuesHandler)
-	r.HandleFunc("/charts/templates/{repo-name}/{chart-name}/{chart-version}", appHandler.GetTemplatesHandler)
-	r.HandleFunc("/charts/manifests/render/{repo-name}/{chart-name}/{chart-version}", appHandler.RenderManifestsHandler)
-	r.HandleFunc("/charts/manifests/{repo-name}/{chart-name}/{chart-version}/{hash}", appHandler.GetManifestsHandler)
+	apiV1 := r.PathPrefix("/api/v1/").Subrouter()
+	apiV1.HandleFunc("/repos", appHandler.GetReposHandler).Methods("GET")
+	apiV1.HandleFunc("/charts/{repo-name}", appHandler.GetChartsHandler).Methods("GET")
+	apiV1.HandleFunc("/charts/{repo-name}/{chart-name}/{chart-version}", appHandler.GetChartHandler).Methods("GET")
+	apiV1.HandleFunc("/charts/values/{repo-name}/{chart-name}/{chart-version}", appHandler.GetValuesHandler).Methods("GET")
+	apiV1.HandleFunc("/charts/templates/{repo-name}/{chart-name}/{chart-version}", appHandler.GetTemplatesHandler).Methods("GET")
+	apiV1.HandleFunc("/charts/manifests/render/{repo-name}/{chart-name}/{chart-version}", appHandler.RenderManifestsHandler).Methods("POST", "OPTIONS")
+	apiV1.HandleFunc("/charts/manifests/{repo-name}/{chart-name}/{chart-version}/{hash}", appHandler.GetManifestsHandler).Methods("GET")
 
 	return r
 }

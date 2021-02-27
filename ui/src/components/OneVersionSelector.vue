@@ -5,7 +5,7 @@
         <v-autocomplete
           :items="repos"
           label="Repo Name"
-          :item-text="contructChartName"
+          :item-text="constructChartName"
           item-value="name"
           v-model="selectedRepo"
           @change="fetchChartList"
@@ -58,7 +58,7 @@
         values: '',
         templates: [],
         progressing: false,
-        initailLoad: true
+        initialLoad: true
       }
     },
     async mounted() {
@@ -75,11 +75,11 @@
         await this.fetchChart()
       }
 
-      this.initailLoad = false
+      this.initialLoad = false
     },
     methods: {
       async fetchRepoList() {
-        if(!this.initailLoad) {
+        if(!this.initialLoad) {
           this.resetState()
         }
 
@@ -87,7 +87,7 @@
         this.repos = response.data
       },
       async fetchChartList() {
-        if(!this.initailLoad) {
+        if(!this.initialLoad) {
           this.resetState()
           this.selectedChart = ""
           this.selectedVersion = ""
@@ -125,7 +125,7 @@
         this.updateQueryParams()
       },
       simplifyTemplateName(templates) {
-        var temps = []
+        let temps = [];
         templates.forEach((template) => {
           const newName = template.name.replace("templates/", "")
           temps.push({
@@ -136,7 +136,7 @@
 
         return temps
       },
-      contructChartName(repo) {
+      constructChartName(repo) {
         return repo.name + " (" + repo.url + ")"
       },
       resetState() {
