@@ -110,29 +110,29 @@ func TestService_RenderManifest(t *testing.T) {
 	createValuesTestFile()
 	hash := getValuesHash()
 
-	stringifiedManifest := "{\"url\":\"/charts/manifests/stable/app-deploy/v0.0.1/"+hash+"\",\"manifests\":[{\"name\":\"deployment.yaml\",\"content\":\"kind: Deployment\"}]}"
-	rawManifest := "---\nkind: Deployment\n"
-	manifest := model.ManifestResponse{
-		URL: "/charts/manifests/stable/app-deploy/v0.0.1/" + hash,
-		Manifests: []model.Manifest{
-			{
-				Name:    "deployment.yaml",
-				Content: "kind: Deployment",
-			},
+	repos := "[{\"name\":\"stable\",\"url\":\"https://charts.helm.sh/stable\"}]"
+	rawManifest := "{\"url\":\"/api/v1/charts/manifests/stable/app-deploy/v0.0.1/e554acfce37f759ada1b70240cee4bcf\",\"manifests\":[{\"name\":\"deployment.yaml\",\"content\":\"kind: Deployment\"}]}"
+	manifest := []model.Manifest{
+		{
+			Name:    "deployment.yaml",
+			Content: "kind: Deployment",
 		},
 	}
 
 	repository := new(repoMock.Repository)
 	helm := new(helmMock.Helm)
-	repository.On("Get", "manifests-stable-app-deploy-v0.0.1-" + hash).Return(stringifiedManifest)
+
+	repository.On("Get", "manifests-stable-app-deploy-v0.0.1-"+hash).Return("")
+	repository.On("Get", "repos").Return(repos)
 	repository.On("Set", "manifests-stable-app-deploy-v0.0.1-"+hash, rawManifest)
-	helm.On("RenderManifest", "stable", "app-deploy", "v0.0.1", []string{"/tmp/values.yaml"}).Return(manifest)
+	helm.On("RenderManifest", "https://charts.helm.sh/stable", "app-deploy", "v0.0.1", []string{"/tmp/values.yaml"}).Return(nil, manifest)
+
 	svc := service.NewService(helm, repository)
-	err, manifest := svc.RenderManifest("stable", "app-deploy", "v0.0.1", []string{"/tmp/values.yaml"})
+	err, actualManifest := svc.RenderManifest("stable", "app-deploy", "v0.0.1", []string{"/tmp/values.yaml"})
 	assert.NoError(t, err)
 
 	expectedManifests := model.ManifestResponse{
-		URL: "/charts/manifests/stable/app-deploy/v0.0.1/" + hash,
+		URL: "/api/v1/charts/manifests/stable/app-deploy/v0.0.1/" + hash,
 		Manifests: []model.Manifest{
 			{
 				Name:    "deployment.yaml",
@@ -141,7 +141,41 @@ func TestService_RenderManifest(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, expectedManifests, manifest)
+	assert.Equal(t, expectedManifests, actualManifest)
+}
+
+func TestService_RenderManifest_Cached(t *testing.T) {
+	createValuesTestFile()
+	hash := getValuesHash()
+
+	stringifiedManifest := "{\"url\":\"/api/v1/charts/manifests/stable/app-deploy/v0.0.1/" + hash + "\",\"manifests\":[{\"name\":\"deployment.yaml\",\"content\":\"kind: Deployment\"}]}"
+	manifest := []model.Manifest{
+		{
+			Name:    "deployment.yaml",
+			Content: "kind: Deployment",
+		},
+	}
+
+	repository := new(repoMock.Repository)
+	helm := new(helmMock.Helm)
+	repository.On("Get", "manifests-stable-app-deploy-v0.0.1-"+hash).Return(stringifiedManifest)
+	helm.On("RenderManifest", "https://charts.helm.sh/stable", "app-deploy", "v0.0.1", []string{"/tmp/values.yaml"}).Return(nil, manifest)
+
+	svc := service.NewService(helm, repository)
+	err, actualManifest := svc.RenderManifest("stable", "app-deploy", "v0.0.1", []string{"/tmp/values.yaml"})
+	assert.NoError(t, err)
+
+	expectedManifests := model.ManifestResponse{
+		URL: "/api/v1/charts/manifests/stable/app-deploy/v0.0.1/" + hash,
+		Manifests: []model.Manifest{
+			{
+				Name:    "deployment.yaml",
+				Content: "kind: Deployment",
+			},
+		},
+	}
+
+	assert.Equal(t, expectedManifests, actualManifest)
 }
 
 func getValuesHash() string {

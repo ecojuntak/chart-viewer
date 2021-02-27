@@ -2,13 +2,13 @@ package handler
 
 import (
 	"chart-viewer/service"
+	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/gorilla/mux"
 )
 
 type handler struct {
@@ -94,16 +94,27 @@ func (h *handler) GetManifestsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) RenderManifestsHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	values := r.FormValue("values")
+	decoder := json.NewDecoder(r.Body)
+	type renderRequest struct {
+		Values string `json:"values"`
+	}
 
+	var req renderRequest
+
+	err := decoder.Decode(&req)
+	if err != nil {
+		panic(err)
+	}
+
+	vars := mux.Vars(r)
+	values := req.Values
 	repoName := vars["repo-name"]
 	chartName := vars["chart-name"]
 	chartVersion := vars["chart-version"]
 
 	valueBytes := []byte(values)
 	fileLocation := fmt.Sprintf("/tmp/%s-values.yaml", time.Now().Format("20060102150405"))
-	err := ioutil.WriteFile(fileLocation, valueBytes, 0644)
+	err = ioutil.WriteFile(fileLocation, valueBytes, 0644)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Cannot store values to file: "+err.Error())
 		return
@@ -122,7 +133,7 @@ func (h *handler) RenderManifestsHandler(w http.ResponseWriter, r *http.Request)
 func (h *handler) CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		w.Header().Set("Access-Control-Allow-Headers:", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "*")
 
