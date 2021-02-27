@@ -7,8 +7,8 @@
       @versionChanged="setVersion"
     />
 
-    <v-row v-if="values !='' && manifests.length == 0">
-      <v-alert type="error" dense outlined cols="12" v-if="errorMessage != ''">
+    <v-row v-if="values !== '' && manifests.length === 0">
+      <v-alert type="error" dense outlined cols="12" v-if="errorMessage !== ''">
         {{ errorMessage }}
       </v-alert>
       <v-col cols="12">
@@ -26,14 +26,14 @@
       </v-col>
     </v-row>
 
-    <v-row v-if="manifests.length != 0">
+    <v-row v-if="manifests.length !== 0">
       <div class="d-block pa-2">
         <v-btn rounded color="primary" dark small @click="manifests = []">
           <v-icon left>mdi-pencil</v-icon> Edit values.yaml
         </v-btn>
       </div>
       <div class="d-flex pa-2">
-        <code>{{ generatedCommand }}</code>
+        <code>{{generatedCommand}}</code>
         <v-btn icon @click="copyGeneratedURL()">
           <v-icon> mdi-content-copy</v-icon>
         </v-btn>
@@ -104,20 +104,25 @@
         this.resetState()
       },
       async getManifest(){
-        const values = escape(this.values)
+        const values = this.values
      
         this.progressing = true
         const response = await api.renderManifest(this.repo, this.chart, this.version, values)
         this.progressing = false
 
-        if(response.status == 500) {
+        if(response === undefined) {
+          this.errorMessage = "Cannot reaching server"
+          return
+        }
+
+        if(response.status === 500) {
           this.errorMessage = response.data.error
         } else {
           this.manifests = response.data.manifests
           this.generatedCommand = "kubectl apply -f " + process.env.VUE_APP_API_SERVER_HOST + response.data.url
         }
       },
-      contructChartName(repo) {
+      constructChartName(repo) {
         return repo.name + " (" + repo.url + ")"
       },
       resetState() {

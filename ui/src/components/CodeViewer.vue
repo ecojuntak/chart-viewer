@@ -34,11 +34,18 @@
         data: this.code
       }
     },
-    props: [
-      "code",
-      "readonly",
-      "message"
-    ],
+    props: {
+      code: {
+        type: String
+      },
+      readonly: {
+        type: Boolean,
+        default: true
+      },
+      message: {
+        type: String
+      }
+    },
     methods: {
       highlighter(values) {
         return highlight(values, languages.yaml);
