@@ -62,8 +62,8 @@ func createRouter(svc service.Service) *mux.Router {
 	appHandler := handler.NewHandler(svc)
 
 	r.Use(appHandler.CORS)
-	r.Use(appHandler.LoggerMiddleware)
 	apiV1 := r.PathPrefix("/api/v1/").Subrouter()
+	apiV1.Use(appHandler.LoggerMiddleware)
 	apiV1.HandleFunc("/repos", appHandler.GetReposHandler).Methods("GET")
 	apiV1.HandleFunc("/charts/{repo-name}", appHandler.GetChartsHandler).Methods("GET")
 	apiV1.HandleFunc("/charts/{repo-name}/{chart-name}/{chart-version}", appHandler.GetChartHandler).Methods("GET")
@@ -72,5 +72,20 @@ func createRouter(svc service.Service) *mux.Router {
 	apiV1.HandleFunc("/charts/manifests/render/{repo-name}/{chart-name}/{chart-version}", appHandler.RenderManifestsHandler).Methods("POST", "OPTIONS")
 	apiV1.HandleFunc("/charts/manifests/{repo-name}/{chart-name}/{chart-version}/{hash}", appHandler.GetManifestsHandler).Methods("GET")
 
+	fileServer := http.FileServer(http.Dir("ui/dist"))
+	r.PathPrefix("/js").Handler(http.StripPrefix("/", fileServer))
+	r.PathPrefix("/css").Handler(http.StripPrefix("/", fileServer))
+	r.PathPrefix("/img").Handler(http.StripPrefix("/", fileServer))
+	r.PathPrefix("/favicon.ico").Handler(http.StripPrefix("/", fileServer))
+	r.PathPrefix("/fonts").Handler(http.StripPrefix("/", fileServer))
+	r.PathPrefix("/").HandlerFunc(indexHandler(fmt.Sprintf("%s/index.html", "ui/dist")))
+
 	return r
+}
+
+func indexHandler(entrypoint string) func(w http.ResponseWriter, r *http.Request) {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, entrypoint)
+	}
+	return fn
 }

@@ -1,11 +1,12 @@
 include .env
 
-APP_NAME=chart-viewer-server
+APP_NAME=chart-viewer
 APP_VERSION = $(shell cat VERSION)
 CHART_REPOS = $(shell cat ./seed.json)
 
 build:
 	go build -o bin/app cmd/main.go
+	cd ui; make build
 
 test:
 	go test -cover ./...
