@@ -1,23 +1,22 @@
-include .env
-
 APP_NAME=chart-viewer
 APP_VERSION = $(shell cat VERSION)
-CHART_REPOS = $(shell cat ./seed.json)
 
-build:
-	go build -o bin/app cmd/main.go
+build-backend:
+	CGO_ENABLED=0 go build -o bin/chart-viewer cmd/main.go
+
+build-frontend:
 	cd ui; make build
 
 test:
 	go test -cover ./...
 
-run:build
-	./bin/app serve
+run:build-backend build-frontend
+	./bin/app serve --host 0.0.0.0 --redis-host 127.0.0.1
 
-seed:build
-	CHART_REPOS='${CHART_REPOS}' ./bin/app seed
+seed:build-backend
+	./bin/app seed --seed-file seed.json
 
-help:build
+help:build-backend
 	./bin/app --help
 
 package:

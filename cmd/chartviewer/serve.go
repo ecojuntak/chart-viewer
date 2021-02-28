@@ -48,7 +48,7 @@ func NewServeCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVar(&defaultHost, "host", "127.0.0.1", "[Optional] App host address")
+	command.Flags().StringVar(&defaultHost, "host", "0.0.0.0", "[Optional] App host address")
 	command.Flags().StringVar(&defaultPort, "port", "9999", "[Optional] App host port")
 	command.Flags().StringVar(&defaultRedisHost, "redis-host", "127.0.0.1", "[Optional] Redis host address")
 	command.Flags().StringVar(&defaultRedisPort, "redis-port", "6379", "[Optional] Redis host port")

@@ -1,7 +1,10 @@
 .idea
 vendor/
-try_helm.go
 bin
+.env
+
 ui/.env
 ui/process.env
-.env
+ui/node_modules
+ui/.idea
+ui/dist

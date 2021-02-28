@@ -28,7 +28,7 @@ func NewSeedCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			host := defaultHost
 			port := defaultPort
-			redisAddress := fmt.Sprintf("%s:%s", defaultHost, defaultPort)
+			redisAddress := fmt.Sprintf("%s:%s", host, port)
 
 			err, repo := repository.NewRepository(redisAddress)
 			if err != nil {
@@ -41,7 +41,7 @@ func NewSeedCommand() *cobra.Command {
 
 			err = seedRepo(repo, defaultSeedPath)
 			if err != nil {
-				fmt.Printf("cannot connect to redis: %s\n", err)
+				fmt.Printf("failed to seed chart repository: %s\n", err)
 				return err
 			}
 			seedChart(repo)
@@ -53,26 +53,19 @@ func NewSeedCommand() *cobra.Command {
 
 	command.Flags().StringVar(&defaultHost, "redis-host", "127.0.0.1", "[Optional] Redis host address")
 	command.Flags().StringVar(&defaultPort, "redis-port", "6379", "[Optional] Redis host port")
-	command.Flags().StringVar(&defaultSeedPath, "seed-file", "", "[Optional] Path to JSON file that contain array of repositories. Will read config from environment variable CHART_REPOS if not set")
+	command.Flags().StringVar(&defaultSeedPath, "seed-file", "./seed.json", "[Optional] Path to JSON file that contain array of repositories. Will read config from environment variable CHART_REPOS if not set")
 
 	return &command
 }
 
 func seedRepo(repo repository.Repository, seedPath string) error {
-	if seedPath != "" {
-		repos, err := ioutil.ReadFile(seedPath)
-		if err != nil {
-			return err
-		}
-
-		log.Printf("populating reposistories from %s\n", seedPath)
-		stringifiedRepos := string(repos)
-		repo.Set("repos", stringifiedRepos)
-		return nil
+	repos, err := ioutil.ReadFile(seedPath)
+	if err != nil {
+		return err
 	}
 
-	log.Println("populating repositories from environment variable CHART_REPOS")
-	stringifiedRepos := os.Getenv("CHART_REPOS")
+	log.Printf("populating reposistories from %s\n", seedPath)
+	stringifiedRepos := string(repos)
 	repo.Set("repos", stringifiedRepos)
 	return nil
 }
