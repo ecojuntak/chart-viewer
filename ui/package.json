@@ -13,8 +13,8 @@
     "js-yaml": "^3.14.0",
     "json-to-pretty-yaml": "^1.2.2",
     "vue": "^2.6.11",
-    "vue-analytics": "^5.22.1",
     "vue-code-diff": "0.0.5",
+    "vue-gtag": "^1.11.0",
     "vue-prism-editor": "^1.2.2",
     "vue-router": "^3.4.3",
     "vuetify": "^2.2.11"

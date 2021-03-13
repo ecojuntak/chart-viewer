@@ -1,4 +1,4 @@
-include .env.development
+include .env
 
 build:
 	npm run build
