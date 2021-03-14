@@ -5,7 +5,7 @@ services:
     ports: 
       - 6379:6379
   server:
-    image: ecojuntak/chart-viewer-server:latest
+    image: ecojuntak/chart-viewer:latest
     ports:
       - 9999:9999
     links:
@@ -15,11 +15,8 @@ services:
       HT_PORT: 9999
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      CHART_REPOS: ${CHART_REPOS}
-  ui:
-    build:
-      context: ui/
-      args:
-        - VUE_APP_API_SERVER_HOST=http://localhost:9999
-    ports:
-      - 8080:80
+    command:
+      - /app/chart-viewer
+      - serve
+      - --redis-host
+      - redis

@@ -5,3 +5,6 @@ build:
 
 run: 
 	npm run serve
+
+deploy:
+	firebase deploy

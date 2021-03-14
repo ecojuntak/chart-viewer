@@ -1,6 +1,6 @@
 # Chart Viewer
 
-You can try the demo [here](https://chart-viewer-84975.web.app)
+You can try the demo [here](https://chartviewer.app)
 
 A simple web app to help you inspect helm chart. So far, you can use this tool for:
 - Inspect helm chart; as simple as showing all the chart templates

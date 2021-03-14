@@ -10,8 +10,12 @@ Vue.use(VueRouter)
 Vue.component('inspect', require('./pages/Inspect').default);
 
 Vue.use(VueGtag, {
-  config: { id: process.env.VUE_APP_GOOGLE_ANALITIC_TOKEN }
-});
+    config: { 
+      id: process.env.VUE_APP_GOOGLE_ANALITIC_TOKEN
+    },
+  }, 
+  router
+);
 
 new Vue({
   vuetify,
