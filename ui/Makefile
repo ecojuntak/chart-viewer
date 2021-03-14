@@ -1,6 +1,7 @@
 include .env
 
 build:
+	npm install
 	npm run build
 
 run: 

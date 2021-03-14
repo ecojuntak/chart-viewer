@@ -8,17 +8,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 )
 
 func NewServeCommand() *cobra.Command {
-	defaultHost := os.Getenv("APP_HOST")
-	defaultPort := os.Getenv("APP_PORT")
-	defaultRedisHost := os.Getenv("REDIS_HOST")
-	defaultRedisPort := os.Getenv("REDIS_PORT")
+	var (
+		defaultHost      string
+		defaultPort      string
+		defaultRedisHost string
+		defaultRedisPort string
+	)
 
 	command := cobra.Command{
 		Use:     "serve",
@@ -78,7 +79,7 @@ func createRouter(svc service.Service) *mux.Router {
 	r.PathPrefix("/img").Handler(http.StripPrefix("/", fileServer))
 	r.PathPrefix("/favicon.ico").Handler(http.StripPrefix("/", fileServer))
 	r.PathPrefix("/fonts").Handler(http.StripPrefix("/", fileServer))
-	r.PathPrefix("/").HandlerFunc(indexHandler(fmt.Sprintf("%s/index.html", "ui/dist")))
+	r.PathPrefix("/").HandlerFunc(indexHandler("ui/dist/index.html"))
 
 	return r
 }

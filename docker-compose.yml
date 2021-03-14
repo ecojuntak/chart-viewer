@@ -10,11 +10,6 @@ services:
       - 9999:9999
     links:
       - redis:redis
-    environment:
-      HT_HOST: 0.0.0.0
-      HT_PORT: 9999
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
     command:
       - /app/chart-viewer
       - serve
