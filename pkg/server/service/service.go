@@ -8,10 +8,11 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Service interface {
@@ -238,7 +239,7 @@ func (s *service) getUrl(repoName string) string {
 	repos := s.GetRepos()
 	for _, r := range repos {
 		if r.Name == repoName {
-			return r.URL
+			return r.GetURL()
 		}
 	}
 

@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Repo struct {
 	Name string `json:"name"`
@@ -10,6 +13,14 @@ type Repo struct {
 func (r Repo) MarshalBinary() ([]byte, error) {
 	s := fmt.Sprintf("%s:%s", r.Name, r.URL)
 	return []byte(s), nil
+}
+
+func (r Repo) GetURL() string {
+	if strings.HasSuffix(r.URL, "/") {
+		return r.URL[:len(r.URL)-1]
+	}
+
+	return r.URL
 }
 
 type Chart struct {
