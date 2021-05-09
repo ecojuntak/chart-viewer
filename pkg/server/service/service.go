@@ -261,7 +261,7 @@ func (s *service) getUrl(repoName string) string {
 	repos := s.GetRepos()
 	for _, r := range repos {
 		if r.Name == repoName {
-			return r.URL
+			return r.GetURL()
 		}
 	}
 
