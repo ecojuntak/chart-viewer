@@ -91,7 +91,10 @@ func (h *handler) GetTemplatesHandler(w http.ResponseWriter, r *http.Request) {
 	repoName := vars["repo-name"]
 	chartName := vars["chart-name"]
 	chartVersion := vars["chart-version"]
-	templates, _ := h.service.GetTemplates(repoName, chartName, chartVersion)
+	templates, err := h.service.GetTemplates(repoName, chartName, chartVersion)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error getting templates: "+err.Error())
+	}
 
 	respondWithJSON(w, http.StatusOK, templates)
 }
