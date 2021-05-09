@@ -1,6 +1,7 @@
 package chartviewer
 
 import (
+	"chart-viewer/pkg/analyzer"
 	"chart-viewer/pkg/helm"
 	"chart-viewer/pkg/repository"
 	"chart-viewer/pkg/server/handler"
@@ -34,14 +35,15 @@ func NewServeCommand() *cobra.Command {
 			redisAddress := fmt.Sprintf("%s:%s", redisHost, redisPort)
 			address := fmt.Sprintf("%s:%s", host, port)
 
-			err, repo := repository.NewRepository(redisAddress)
+			repo, err := repository.NewRepository(redisAddress)
 			if err != nil {
 				fmt.Printf("cannot connect to redis: %s\n", err)
 				return
 			}
 
 			helmClient := helm.NewHelmClient(repo)
-			svc := service.NewService(helmClient, repo)
+			analyser := analyzer.New()
+			svc := service.NewService(helmClient, repo, analyser)
 			r := createRouter(svc)
 
 			log.Printf("server run on http://%s\n", address)

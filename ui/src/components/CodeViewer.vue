@@ -1,6 +1,5 @@
 <template>
   <v-container>
-    {{ message }}
     <v-row>
       <v-col>
         <prism-editor
@@ -25,7 +24,7 @@
   import 'prismjs/themes/prism-tomorrow.css';
   
   export default {
-    name: "CodoViewer",
+    name: "CodeViewer",
     components: {
       PrismEditor
     },
@@ -42,9 +41,6 @@
         type: Boolean,
         default: true
       },
-      message: {
-        type: String
-      }
     },
     methods: {
       highlighter(values) {

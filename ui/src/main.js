@@ -11,7 +11,7 @@ Vue.component('inspect', require('./pages/Inspect').default);
 
 Vue.use(VueGtag, {
     config: { 
-      id: process.env.VUE_APP_GOOGLE_ANALITIC_TOKEN
+      id: process.env.VUE_APP_GOOGLE_ANALYTIC_TOKEN
     },
   }, 
   router

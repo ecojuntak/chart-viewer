@@ -1,10 +1,10 @@
 <template>
   <v-container>
-    <one-version-selector 
+    <one-version-selector-with-kube-version
       @templatesChanged="setTemplate"
     />
     
-    <v-row v-if="templates.length != 0">
+    <v-row v-if="templates.length !== 0">
       <chart-viewer :templates="templates" />
     </v-row>
     
@@ -14,13 +14,13 @@
 <script>
 
   import chartViewer from '../components/ChartViewer'
-  import oneVersionSelector from '../components/OneVersionSelector'
+  import oneVersionSelectorWithKubeVersion from '../components/OneVersionSelectorWithKubeVersion'
 
   export default {
     name: 'Home',
     components: {
       chartViewer,
-      oneVersionSelector,
+      oneVersionSelectorWithKubeVersion,
     },
     data () {
       return {

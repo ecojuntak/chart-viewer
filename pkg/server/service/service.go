@@ -2,43 +2,48 @@ package service
 
 import (
 	"bytes"
+	"chart-viewer/pkg/analyzer"
 	"chart-viewer/pkg/helm"
 	"chart-viewer/pkg/model"
 	"chart-viewer/pkg/repository"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Service interface {
 	GetRepos() []model.Repo
 	GetCharts(repoName string) (error, []model.Chart)
 	GetValues(repoName, chartName, chartVersion string) (error, map[string]interface{})
-	GetTemplates(repoName, chartName, chartVersion string) []model.Template
+	GetTemplates(repoName, chartName, chartVersion string) ([]model.Template, error)
 	RenderManifest(repoName, chartName, chartVersion string, values []string) (error, model.ManifestResponse)
 	GetStringifiedManifests(repoName, chartName, chartVersion, hash string) string
 	GetChart(repoName string, chartName string, chartVersion string) (error, model.ChartDetail)
+	AnalyzeTemplate(templates []model.Template, kubeVersion string) ([]model.AnalyticsResult, error)
 }
 
 type service struct {
 	helmClient helm.Helm
 	repository repository.Repository
+	analyzer   analyzer.Analytic
 }
 
-func NewService(helmClient helm.Helm, repository repository.Repository) Service {
+func NewService(helmClient helm.Helm, repository repository.Repository, analyzer analyzer.Analytic) Service {
 	return &service{
 		helmClient: helmClient,
 		repository: repository,
+		analyzer:   analyzer,
 	}
 }
 
 func (s *service) GetRepos() []model.Repo {
 	stringifiedRepos := s.repository.Get("repos")
-	var repos []model.Repo
+	repos := []model.Repo{}
 	_ = json.Unmarshal([]byte(stringifiedRepos), &repos)
 
 	return repos
@@ -120,14 +125,14 @@ func (s *service) GetValues(repoName, chartName, chartVersion string) (error, ma
 	return nil, values
 }
 
-func (s *service) GetTemplates(repoName, chartName, chartVersion string) []model.Template {
+func (s *service) GetTemplates(repoName, chartName, chartVersion string) ([]model.Template, error) {
 	cacheKey := fmt.Sprintf("template-%s-%s-%s", repoName, chartName, chartVersion)
 	stringifiedTemplates := s.repository.Get(cacheKey)
 	var cachedTemplates []model.Template
 	_ = json.Unmarshal([]byte(stringifiedTemplates), &cachedTemplates)
 	if len(cachedTemplates) != 0 {
 		log.Printf("template-%s-%s-%s chart values fetched from cache\n", repoName, chartName, chartVersion)
-		return cachedTemplates
+		return cachedTemplates, nil
 	}
 
 	var url string
@@ -139,11 +144,14 @@ func (s *service) GetTemplates(repoName, chartName, chartVersion string) []model
 		}
 	}
 
-	templates := s.helmClient.GetManifest(url, chartName, chartVersion)
+	templates, err := s.helmClient.GetManifest(url, chartName, chartVersion)
+	if err != nil {
+		return nil, err
+	}
 	templatesByte, _ := json.Marshal(templates)
 	s.repository.Set(cacheKey, string(templatesByte))
 
-	return templates
+	return templates, nil
 }
 
 func (s *service) RenderManifest(repoName, chartName, chartVersion string, values []string) (error, model.ManifestResponse) {
@@ -198,12 +206,27 @@ func (s *service) GetChart(repoName string, chartName string, chartVersion strin
 	if err != nil {
 		return err, model.ChartDetail{}
 	}
-	templates := s.GetTemplates(repoName, chartName, chartVersion)
+	templates, err := s.GetTemplates(repoName, chartName, chartVersion)
 
 	return nil, model.ChartDetail{
 		Values:    values,
 		Templates: templates,
 	}
+}
+
+func (s *service) AnalyzeTemplate(templates []model.Template, kubeVersion string) ([]model.AnalyticsResult, error) {
+	stringifiedApiVersion := s.repository.Get("api-versions")
+	var kubeAPIVersions []model.KubernetesAPIVersion
+	_ = json.Unmarshal([]byte(stringifiedApiVersion), &kubeAPIVersions)
+
+	var kubeAPIVersion model.KubernetesAPIVersion
+	for _, k := range kubeAPIVersions {
+		if k.KubeVersion == kubeVersion {
+			kubeAPIVersion = k
+		}
+	}
+
+	return s.analyzer.Analyze(templates, kubeAPIVersion)
 }
 
 func hashFileContent(fileLocation string) string {

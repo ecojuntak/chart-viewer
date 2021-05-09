@@ -4,7 +4,6 @@ LABEL stage=builder
 WORKDIR /builder
 
 COPY . .
-RUN cat seed.json
 
 RUN make build-backend
 
@@ -23,4 +22,5 @@ WORKDIR /app
 
 COPY --from=backend-builder /builder/bin/chart-viewer .
 COPY --from=backend-builder /builder/seed.json ./seed.json
+COPY --from=backend-builder /builder/api_versions.json ./api_versions.json
 COPY --from=frontend-builder /builder/ui/dist ./ui/dist

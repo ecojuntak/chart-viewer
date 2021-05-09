@@ -13,7 +13,7 @@ type repository struct {
 	redisClient *redis.Client
 }
 
-func NewRepository(redisAddress string) (error, Repository) {
+func NewRepository(redisAddress string) (Repository, error) {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: redisAddress,
 	})
@@ -21,12 +21,12 @@ func NewRepository(redisAddress string) (error, Repository) {
 	status := redisClient.Ping()
 	err := status.Err()
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
-	return nil, repository{
+	return repository{
 		redisClient: redisClient,
-	}
+	}, nil
 }
 
 func (r repository) Set(key string, value string) {

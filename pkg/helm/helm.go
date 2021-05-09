@@ -5,22 +5,23 @@ import (
 	"chart-viewer/pkg/model"
 	"chart-viewer/pkg/repository"
 	"fmt"
+	"log"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/cli/values"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/releaseutil"
-	"log"
-	"path/filepath"
-	"regexp"
-	"sort"
-	"strings"
 )
 
 type Helm interface {
 	GetValues(chartUrl, chartName, chartVersion string) (error, map[string]interface{})
-	GetManifest(chartUrl, chartName, chartVersion string) []model.Template
+	GetManifest(chartUrl, chartName, chartVersion string) ([]model.Template, error)
 	RenderManifest(chartUrl, chartName, chartVersion string, files []string) (error, []model.Manifest)
 }
 
@@ -67,16 +68,19 @@ func (h helm) GetValues(chartUrl, chartName, chartVersion string) (error, map[st
 	return nil, chartRequested.Values
 }
 
-func (h helm) GetManifest(chartUrl, chartName, chartVersion string) []model.Template {
+func (h helm) GetManifest(chartUrl, chartName, chartVersion string) ([]model.Template, error) {
 	h.client.ChartPathOptions.Version = chartVersion
 	h.client.ReleaseName = chartName
 	h.client.RepoURL = chartUrl
 	cp, err := h.client.ChartPathOptions.LocateChart(chartName, settings)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	chartRequested, err := loader.Load(cp)
+	if err != nil {
+		return nil, err
+	}
 
 	templates := chartRequested.Templates
 
@@ -89,7 +93,7 @@ func (h helm) GetManifest(chartUrl, chartName, chartVersion string) []model.Temp
 		})
 	}
 
-	return templateStrings
+	return templateStrings, nil
 }
 
 func (h helm) RenderManifest(chartUrl, chartName, chartVersion string, files []string) (error, []model.Manifest) {

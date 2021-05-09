@@ -10,8 +10,8 @@ async function fetchCharts(repoName) {
     return await axios.get(baseURL + '/api/v1/charts/' + repoName)
 }
 
-async function fetchChart(repoName, chartName, chartVersion) {
-    return await axios.get(baseURL + '/api/v1/charts/' + repoName + '/' + chartName + '/' + chartVersion)
+async function fetchChart(repoName, chartName, chartVersion, kubeVersion) {
+    return await axios.get(baseURL + '/api/v1/charts/' + repoName + '/' + chartName + '/' + chartVersion + '?kube-version=' + kubeVersion)
 }
 
 async function renderManifest(repoName, chartName, chartVersion, values) {

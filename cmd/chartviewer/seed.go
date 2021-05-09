@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -17,31 +16,38 @@ import (
 var wg = &sync.WaitGroup{}
 
 func NewSeedCommand() *cobra.Command {
-	defaultHost := os.Getenv("REDIS_HOST")
-	defaultPort := os.Getenv("REDIS_PORT")
-	defaultSeedPath := ""
+	var (
+		redisHost          string
+		redisPort          string
+		repoSeedPath       string
+		apiVersionSeedPath string
+	)
 
 	command := cobra.Command{
 		Use:     "seed",
 		Short:   "Seed the redis with chart info",
 		Example: "chart-viewer seed --redis-host 127.0.0.1 --redis-port 6379 --seed-file ./seed.json",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			host := defaultHost
-			port := defaultPort
-			redisAddress := fmt.Sprintf("%s:%s", host, port)
+			redisAddress := fmt.Sprintf("%s:%s", redisHost, redisPort)
 
-			err, repo := repository.NewRepository(redisAddress)
+			repo, err := repository.NewRepository(redisAddress)
 			if err != nil {
-				fmt.Printf("cannot connect to redis: %s\n", err)
+				log.Printf("cannot connect to redis: %s\n", err)
 				return err
 			}
 
-			log.Printf("connected to redis on %s:%s\n", host, port)
+			log.Printf("connected to redis on %s:%s\n", redisHost, redisPort)
 			log.Println("starting to populate redis...")
 
-			err = seedRepo(repo, defaultSeedPath)
+			err = seedKubeVersion(repo, apiVersionSeedPath)
 			if err != nil {
-				fmt.Printf("failed to seed chart repository: %s\n", err)
+				log.Printf("failed to seed api version: %s\n", err)
+			}
+			log.Println("Kubernetes API version seeded")
+
+			err = seedRepo(repo, repoSeedPath)
+			if err != nil {
+				log.Printf("failed to seed chart repository: %s\n", err)
 				return err
 			}
 			seedChart(repo)
@@ -51,11 +57,22 @@ func NewSeedCommand() *cobra.Command {
 		},
 	}
 
-	command.Flags().StringVar(&defaultHost, "redis-host", "127.0.0.1", "[Optional] Redis host address")
-	command.Flags().StringVar(&defaultPort, "redis-port", "6379", "[Optional] Redis host port")
-	command.Flags().StringVar(&defaultSeedPath, "seed-file", "./seed.json", "[Optional] Path to JSON file that contain array of repositories. Will read config from environment variable CHART_REPOS if not set")
-
+	command.Flags().StringVar(&redisHost, "redis-host", "127.0.0.1", "Redis host address")
+	command.Flags().StringVar(&redisPort, "redis-port", "6379", "Redis host port")
+	command.Flags().StringVar(&repoSeedPath, "repo-seed", "./seed.json", "Path to JSON file that contain array of repositories.")
+	command.Flags().StringVar(&apiVersionSeedPath, "kube-version-seed", "./api_versions.json", "Path to JSON file that contain list of Kubernetes API version for each Kubernetes version")
 	return &command
+}
+
+func seedKubeVersion(repo repository.Repository, path string) error {
+	apiVersions, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	stringifiedApiVersion := string(apiVersions)
+	repo.Set("api-versions", stringifiedApiVersion)
+	return nil
 }
 
 func seedRepo(repo repository.Repository, seedPath string) error {
@@ -72,7 +89,7 @@ func seedRepo(repo repository.Repository, seedPath string) error {
 
 func seedChart(repo repository.Repository) {
 	h := helm.NewHelmClient(repo)
-	svc := service.NewService(h, repo)
+	svc := service.NewService(h, repo, nil)
 
 	chartRepos := svc.GetRepos()
 

@@ -1,14 +1,16 @@
 package handler
 
 import (
+	"chart-viewer/pkg/model"
 	"chart-viewer/pkg/server/service"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 type handler struct {
@@ -44,6 +46,7 @@ func (h *handler) GetChartHandler(w http.ResponseWriter, r *http.Request) {
 	repoName := vars["repo-name"]
 	chartName := vars["chart-name"]
 	chartVersion := vars["chart-version"]
+	kubeVersion := r.URL.Query().Get("kube-version")
 
 	err, chart := h.service.GetChart(repoName, chartName, chartVersion)
 	if err != nil {
@@ -52,7 +55,19 @@ func (h *handler) GetChartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, chart)
+	analyticsResults, err := h.service.AnalyzeTemplate(chart.Templates, kubeVersion)
+	if err != nil {
+		log.Printf("error while analyzing the template: %s\n", err)
+		respondWithError(w, 500, err.Error())
+		return
+	}
+
+	response := model.AnalyticResponse{
+		Values:    chart.Values,
+		Templates: analyticsResults,
+	}
+
+	respondWithJSON(w, http.StatusOK, response)
 }
 
 func (h *handler) GetValuesHandler(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +91,7 @@ func (h *handler) GetTemplatesHandler(w http.ResponseWriter, r *http.Request) {
 	repoName := vars["repo-name"]
 	chartName := vars["chart-name"]
 	chartVersion := vars["chart-version"]
-	templates := h.service.GetTemplates(repoName, chartName, chartVersion)
+	templates, _ := h.service.GetTemplates(repoName, chartName, chartVersion)
 
 	respondWithJSON(w, http.StatusOK, templates)
 }

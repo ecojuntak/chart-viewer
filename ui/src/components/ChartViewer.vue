@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row>
-      <v-col v-if="templates.length != 0" cols="3">
+      <v-col v-if="templates.length !== 0" cols="3">
         <v-card tile>
             <v-list max-height="800" class="overflow-y-auto">
               <v-subheader>
@@ -26,16 +26,24 @@
           </v-card>
       </v-col>
 
-      <v-col cols="9" v-if="selectedTemplate != ''">
-        <code-viewer :readonly="true" :code="selectedTemplate.content" :message="selectedTemplate.name"> </code-viewer>
+      <v-col cols="9" v-if="selectedTemplate.content !== ''">
+        <div class="ml-3">
+          <div class="font-weight-bold body-1"> {{ selectedTemplate.name }} </div>
+          <div v-if="selectedTemplate.compatible === false" class="red--text "> Resource API version not compatible with selected kubernetes version </div>
+        </div>
+        <code-viewer
+            :readonly="true"
+            :code="selectedTemplate.content"
+        > </code-viewer>
       </v-col>
     </v-row>
   </v-container>
 </template>
 
 <script>
-  import codeViewer from './CodeViewer'
-  export default {
+import codeViewer from './CodeViewer'
+
+export default {
     name: "ChartViewer",
     components: {
       codeViewer
@@ -45,7 +53,10 @@
     ],
     data() {
       return {
-        selectedTemplate: "",
+        selectedTemplate: {
+          content: "",
+          compatible: true
+        },
         searchQuery: "",
         temps: this.templates
       }
@@ -57,10 +68,9 @@
       filterTemplate() {
         console.log(this.searchQuery)
         const query = this.searchQuery
-        var temps = this.templates.filter(function(template){
-                  return template.name.includes(query)
-                });
-        this.temps = temps
+        this.temps = this.templates.filter(function (template) {
+          return template.name.includes(query)
+        })
       }
     }
   }
